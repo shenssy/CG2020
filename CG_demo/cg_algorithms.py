@@ -26,9 +26,117 @@ def draw_line(p_list, algorithm):
             for x in range(x0, x1 + 1):
                 result.append((x, int(y0 + k * (x - x0))))
     elif algorithm == 'DDA':
-        pass
+        k = (y1 - y0) / (x1 - x0)
+        if (abs(k) < 1 and x0 > x1) or (abs(k) >= 1 and y0 > y1):
+            x0, y0, x1, y1 = x1, y1, x0, y0
+        if abs(x1-x0) >= abs(y1-y0):#choose the longer side to use the step of 1
+            length = abs(x1-x0)
+        else:
+            length = abs(y1-y0)
+        d_x = (x1-x0) / length
+        d_y = (y1-y0) / length
+        x = x0 + 0.5
+        y = y0 + 0.5 #plus 0.5 for correct round off
+        i = 0
+        while(i != length):
+            result.append((int(x),int(y)))
+            if abs(k) >= 1:
+                y += 1
+                x += d_x
+            else:
+                x += 1
+                y += d_y
+            i += 1
     elif algorithm == 'Bresenham':
-        pass
+        k = (y0-y1) / (x0-x1)
+        if (abs(k) < 1 and x0 > x1) or (abs(k) >=1 and y0 > y1):
+            x0, y0, x1, y1 = x1, y1, x0, y0
+        x = x0
+        y = y0
+        d_x = x1 - x0
+        d_y = y1 - y0
+        result.append((x,y))
+        if abs(k) < 1:
+            y_pre = y0
+            p_k = 2*d_y - d_x
+            i = 0
+            while i != d_x:
+                if p_k > 0:# d1>d2
+                    y_pre = y
+                    y += 1
+                x += 1
+                if i != 0 and y_pre == y:
+                    p_k += 2*d_y
+                elif i != 0 and y_pre + 1 == y:
+                    p_k += (2*d_y-2*d_x)
+                result.append((x,y))
+                i += 1
+        else:
+            x_pre = x0
+            p_k = 2*d_x - d_y
+            i = 0
+            while i != d_y:
+                if p_k > 0:
+                    x_pre = x
+                    x += 1
+                y += 1
+                if i != 0 and x_pre == x:
+                    p_k += 2*d_x
+                elif i != 0 and x_pre + 1 == x:
+                    p_k +=(2*d_x-2*d_y)
+                result.append((x,y))
+                i += 1
+        '''
+        if x0 > x1:
+            x0, y0, x1, y1 = x1, y1, x0, y0
+        if x0 == x1:#k does not exist
+            for y in range(y0, y1 + 1):
+                result.append((x0, y))
+            return result
+        k = (y0-y1) / (x0-x1)
+        b = y0 - k*x0
+        if k == 0:#y0==y1
+            for x in range(x0, x1+1):
+                result.append((x,y0))
+        elif abs(k) == 1:
+            y = y0
+            for x in range(x0,x1+1):
+                result.append(x,y)
+                y += 1
+        elif abs(k) < 1:
+            y = y0
+            for x in range(x0,x1+1):
+                y_n = k * x + b #the value of next y
+                if k > 0:
+                    down = abs(y - y_n)
+                    up = abs((y+1) - y_n)
+                    if up < down:
+                        y += 1
+                else:
+                    down = abs((y-1) - y_n)
+                    up = abs(y - y_n)
+                    if down < up:
+                        y -= 1
+                result.append((x,y))
+        else:
+            x = x0
+            if k > 0:
+                for y in range(y0, y1+1):
+                    x_n = (y - b) / k
+                    left = abs(x_n - x)
+                    right = abs((x+1) - x_n)
+                    if right < left:
+                        x += 1
+                    result.append((x,y))
+            else:
+                for y in range(y0, y1-1):
+                    x_n = (y - b) / k
+                    left = abs(x - x_n)
+                    right = abs((x+1) - x_n)
+                    if right < left:
+                        x += 1
+                    result.append((x,y))
+        '''
     return result
 
 
@@ -52,7 +160,41 @@ def draw_ellipse(p_list):
     :param p_list: (list of list of int: [[x0, y0], [x1, y1]]) 椭圆的矩形包围框左上角和右下角顶点坐标
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
-    pass
+    result = []
+    x0, y0 = p_list[0]
+    x1, y1 = p_list[1]
+    x_mid = (x0+x1) / 2
+    y_mid = (y0+y1) / 2
+    a = abs(x0 - x_mid)
+    b = abs(y0 - y_mid)
+    x = 0
+    y = b
+    k = 0
+    while abs(k) < 1:#the upper half
+        y_real = math.sqrt(b*b-b*b*x*x/(a*a))
+        if abs(y_real-y) > abs(y_real-(y-1)):#down side one is closer
+            y -= 1
+        result.append((x + x_mid,y + y_mid))
+        result.append((-x - x_mid,y + y_mid))
+        result.append((x + x_mid,-y - y_mid))
+        result.append((-x - x_mid,-y - y_mid))
+        x += 1
+        k = -(b*b*x*x)/(a*a*y*y)
+    x = a
+    y = 0
+    k = None
+    while k == None or abs(k) >= 1:#the half below
+        x_real = math.sqrt(a*a-a*a*y*y/(b*b))
+        if abs(x_real-x) > abs(x_real - (x-1)):
+            x -= 1
+        result.append((x + x_mid,y + y_mid))
+        result.append((-x - x_mid,y + y_mid))#for other 3 quadrants
+        result.append((x + x_mid,-y - y_mid))
+        result.append((-x - x_mid,-y - y_mid))
+        y += 1
+        k = -(b*b*x*x)/(a*a*y*y)
+    return result
+
 
 
 def draw_curve(p_list, algorithm):
@@ -73,7 +215,10 @@ def translate(p_list, dx, dy):
     :param dy: (int) 垂直方向平移量
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    result = []
+    for i in p_list:
+        result.append((i[0] + dx,i[1] + dy))
+    return result
 
 
 def rotate(p_list, x, y, r):
