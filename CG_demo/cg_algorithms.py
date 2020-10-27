@@ -48,22 +48,28 @@ def draw_line(p_list, algorithm):
                 y += d_y
             i += 1
     elif algorithm == 'Bresenham':
-        k = (y0-y1) / (x0-x1)
-        if (abs(k) < 1 and x0 > x1) or (abs(k) >=1 and y0 > y1):
+        if x0 == x1:
+            k = None
+        else:
+            k = (y0-y1) / (x0-x1)
+        if k != None and ((abs(k) < 1 and x0 > x1) or (abs(k) >=1 and y0 > y1)):
             x0, y0, x1, y1 = x1, y1, x0, y0
         x = x0
         y = y0
-        d_x = x1 - x0
-        d_y = y1 - y0
+        d_x = abs(x1 - x0)
+        d_y = abs(y1 - y0)
         result.append((x,y))
-        if abs(k) < 1:
+        if k != None and abs(k) < 1:
             y_pre = y0
             p_k = 2*d_y - d_x
             i = 0
             while i != d_x:
                 if p_k > 0:# d1>d2
                     y_pre = y
-                    y += 1
+                    if k >= 0:
+                        y += 1
+                    else:
+                        y -= 1
                 x += 1
                 if i != 0 and y_pre == y:
                     p_k += 2*d_y
@@ -78,11 +84,14 @@ def draw_line(p_list, algorithm):
             while i != d_y:
                 if p_k > 0:
                     x_pre = x
-                    x += 1
+                    if k != None and k >= 0:
+                        x += 1
+                    else:
+                        x -= 1
                 y += 1
                 if i != 0 and x_pre == x:
                     p_k += 2*d_x
-                elif i != 0 and x_pre + 1 == x:
+                elif i != 0 and (x_pre + 1 == x or x_pre - 1 == x):
                     p_k +=(2*d_x-2*d_y)
                 result.append((x,y))
                 i += 1
@@ -145,44 +154,6 @@ def draw_ellipse(p_list):
         result.append((-x - x_mid,-y - y_mid))
     return result
 
-    
-
-    '''
-    result = []
-    x0, y0 = p_list[0]
-    x1, y1 = p_list[1]
-    x_mid = (x0+x1) / 2
-    y_mid = (y0+y1) / 2
-    a = abs(x0 - x_mid)
-    b = abs(y0 - y_mid)
-    x = 0
-    y = b
-    k = 0
-    while abs(k) < 1:#the upper half
-        y_real = math.sqrt(b*b-b*b*x*x/(a*a))
-        if abs(y_real-y) > abs(y_real-(y-1)):#down side one is closer
-            y -= 1
-        result.append((x + x_mid,y + y_mid))
-        result.append((-x - x_mid,y + y_mid))
-        result.append((x + x_mid,-y - y_mid))
-        result.append((-x - x_mid,-y - y_mid))
-        x += 1
-        k = -(b*b*x*x)/(a*a*y*y)
-    x = a
-    y = 0
-    k = None
-    while k == None or abs(k) >= 1:#the half below
-        x_real = math.sqrt(a*a-a*a*y*y/(b*b))
-        if abs(x_real-x) > abs(x_real - (x-1)):
-            x -= 1
-        result.append((x + x_mid,y + y_mid))
-        result.append((-x - x_mid,y + y_mid))#for other 3 quadrants
-        result.append((x + x_mid,-y - y_mid))
-        result.append((-x - x_mid,-y - y_mid))
-        y += 1
-        k = -(b*b*x*x)/(a*a*y*y)
-    return result'''
-
 
 
 def draw_curve(p_list, algorithm):
@@ -192,7 +163,9 @@ def draw_curve(p_list, algorithm):
     :param algorithm: (string) 绘制使用的算法，包括'Bezier'和'B-spline'（三次均匀B样条曲线，曲线不必经过首末控制点）
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
-    pass
+    result = []
+    
+    return result
 
 
 def translate(p_list, dx, dy):
@@ -218,7 +191,14 @@ def rotate(p_list, x, y, r):
     :param r: (int) 顺时针旋转角度（°）
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    result = []
+    for i in p_list:
+        new_x = i[0] - x #take (x,y) as (0,0)
+        new_y = i[1] - y
+        res_x = new_x * math.cos(r) - new_y * math.sin(r)
+        res_y = new_x * math.sin(r) + new_y * math.cos(r)
+        result.append(res_x + x, res_y + y)
+    return result
 
 
 def scale(p_list, x, y, s):
@@ -230,8 +210,25 @@ def scale(p_list, x, y, s):
     :param s: (float) 缩放倍数
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    result = []
+    for i in p_list:
+        new_x = i[0] - x
+        new_y = i[1] - y
+        result.append(new_x * s + x, new_y * s + y)
+    return result
 
+
+def coding(x0, y0, x_min, y_min, x_max, y_max):
+    res = 0b0000
+    if x0 < x_min:
+        res = res | 0b0001
+    if x0 > x_max:
+        res = res | 0b0010
+    if y0 < y_min:
+        res = res | 0b0100
+    if y0 > y_max:
+        res = res | 0b1000
+    return res
 
 def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     """线段裁剪
@@ -244,4 +241,53 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :param algorithm: (string) 使用的裁剪算法，包括'Cohen-Sutherland'和'Liang-Barsky'
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
-    pass
+    result = []
+    if algorithm == 'Cohen-Sutherland':
+        flag = 0 #need to break out of the loop or not
+        x0, y0 = p_list[0]
+        x1, y1 = p_list[1]
+        while flag == 0:
+            c1 = coding(x0,y0,x_min,y_min,x_max,y_max)
+            c2 = coding(x1,y1,x_min,y_min,x_max,y_max)
+            if c1&c2 != 0:
+                flag = 1
+            else:
+                if c1|c2 == 0:
+                    result.append((int(x0),int(y0)))
+                    result.append((int(x1),int(y1)))
+                    flag = 1
+                else:
+                    if c1 == 0:#swap, make sure (x0,y0) is always out of the block
+                        x = x0
+                        y = y0
+                        x0 = x1
+                        y0 = y1
+                        x1 = x
+                        y1 = y
+                        c = c1
+                        c1 = c2
+                        c2 = c
+                    #find interpoint
+                    if x0 != x1:
+                        k = (y0-y1) / (x0-x1)
+                        b = y0 - k*x0
+                    else:
+                        k = None
+                        b = None
+                    if (c1&(0b0100)) == 0b0100:#down
+                        y0 = y_min
+                        if k != None:
+                            x0 = (y0-b)/k
+                    elif (c1&(0b1000)) == 0b1000:#up
+                        y0 = y_max
+                        if k != None:
+                            x0 = (y0-b)/k
+                    elif (c1&(0b0001)) == 0b0001:#left
+                        x0 = x_min
+                        y0 = k*x0 + b
+                    elif (c1&(0b0010)) == 0b0010:#right
+                        x0 = x_max
+                        y0 = k*x0 + b
+    #elif algorithm == 'Liang-Barsky':
+
+    return result
