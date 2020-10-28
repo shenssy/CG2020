@@ -26,21 +26,27 @@ def draw_line(p_list, algorithm):
             for x in range(x0, x1 + 1):
                 result.append((x, int(y0 + k * (x - x0))))
     elif algorithm == 'DDA':
-        k = (y1 - y0) / (x1 - x0)
-        if (abs(k) < 1 and x0 > x1) or (abs(k) >= 1 and y0 > y1):
+        if x1 == x0:
+            k = None
+        else:
+            k = (y1 - y0) / (x1 - x0)
+        if k != None and ((abs(k) < 1 and x0 > x1) or (abs(k) >= 1 and y0 > y1)):
             x0, y0, x1, y1 = x1, y1, x0, y0
         if abs(x1-x0) >= abs(y1-y0):#choose the longer side to use the step of 1
             length = abs(x1-x0)
         else:
             length = abs(y1-y0)
-        d_x = (x1-x0) / length
+        if k == None:
+            d_x = 0
+        else:
+            d_x = (x1-x0) / length
         d_y = (y1-y0) / length
         x = x0 + 0.5
         y = y0 + 0.5 #plus 0.5 for correct round off
         i = 0
         while(i != length):
             result.append((int(x),int(y)))
-            if abs(k) >= 1:
+            if k == None or abs(k) >= 1:
                 y += 1
                 x += d_x
             else:
@@ -127,7 +133,7 @@ def draw_ellipse(p_list):
     b = abs(y0 - y_mid)
     x = 0
     y = b
-    result.append((x,y))
+    result.append((int(x),int(y)))
     p = b*b - a*a*b + a*a/4
     while b*b*x < a*a*y:
         if p < 0:
@@ -136,10 +142,10 @@ def draw_ellipse(p_list):
             p += 2*b*b*x - 2*a*a*y + 2*a*a + 3*b*b
             y -= 1
         x += 1
-        result.append((x + x_mid,y + y_mid))
-        result.append((-x - x_mid,y + y_mid))
-        result.append((x + x_mid,-y - y_mid))
-        result.append((-x - x_mid,-y - y_mid))
+        result.append((int(x + x_mid),int(y + y_mid)))
+        result.append((int(-x - x_mid),int(y + y_mid)))
+        result.append((int(x + x_mid),int(-y - y_mid)))
+        result.append((int(-x - x_mid),int(-y - y_mid)))
     p = b*b*(x+1/2)*(x+1/2)+a*a*(y-1)*(y-1)-a*a*b*b
     while y >= 0:
         if p <= 0:
@@ -148,10 +154,10 @@ def draw_ellipse(p_list):
         else:
             p += 2*b*b*x - 2*a*a*y + 2*b*b + 3*a*a
         y -= 1
-        result.append((x + x_mid,y + y_mid))
-        result.append((-x - x_mid,y + y_mid))
-        result.append((x + x_mid,-y - y_mid))
-        result.append((-x - x_mid,-y - y_mid))
+        result.append((int(x + x_mid),int(y + y_mid)))
+        result.append((int(-x - x_mid),int(y + y_mid)))
+        result.append((int(x + x_mid),int(-y - y_mid)))
+        result.append((int(-x - x_mid),int(-y - y_mid)))
     return result
 
 
@@ -197,7 +203,7 @@ def rotate(p_list, x, y, r):
         new_y = i[1] - y
         res_x = new_x * math.cos(r) - new_y * math.sin(r)
         res_y = new_x * math.sin(r) + new_y * math.cos(r)
-        result.append(res_x + x, res_y + y)
+        result.append((res_x + x, res_y + y))
     return result
 
 
@@ -214,7 +220,7 @@ def scale(p_list, x, y, s):
     for i in p_list:
         new_x = i[0] - x
         new_y = i[1] - y
-        result.append(new_x * s + x, new_y * s + y)
+        result.append((new_x * s + x, new_y * s + y))
     return result
 
 
@@ -230,6 +236,27 @@ def coding(x0, y0, x_min, y_min, x_max, y_max):
         res = res | 0b1000
     return res
 
+def find_u(p1,q1,p2,q2,p3,q3,p4,q4):
+    umax = 0
+    umin = 1
+    if p1 < 0 and umax < (q1/p1):
+        umax = q1/p1
+    elif p1 > 0 and umin > (q1/p1):
+        umin = q1/p1
+    if p2 < 0 and umax < (q2/p2):
+        umax = q2/p2
+    elif p2 > 0 and umin > (q2/p2):
+        umin = q2/p2
+    if p3 < 0 and umax < (q3/p3):
+        umax = q3/p3
+    elif p3 > 0 and umin > (q3/p3):
+        umin = q3/p3
+    if p4 < 0 and umax < (q4/p4):
+        umax = q4/p4
+    elif p4 > 0 and umin > (q4/p4):
+        umin = q4/p4
+    return [umax,umin]
+
 def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     """线段裁剪
 
@@ -242,19 +269,21 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
     result = []
+    x0, y0 = p_list[0]
+    x1, y1 = p_list[1]
     if algorithm == 'Cohen-Sutherland':
         flag = 0 #need to break out of the loop or not
-        x0, y0 = p_list[0]
-        x1, y1 = p_list[1]
         while flag == 0:
             c1 = coding(x0,y0,x_min,y_min,x_max,y_max)
             c2 = coding(x1,y1,x_min,y_min,x_max,y_max)
             if c1&c2 != 0:
+                result.append((0,0))
+                result.append((0,0))
                 flag = 1
             else:
                 if c1|c2 == 0:
-                    result.append((int(x0),int(y0)))
-                    result.append((int(x1),int(y1)))
+                    result.append((x0,y0))
+                    result.append((x1,y1))
                     flag = 1
                 else:
                     if c1 == 0:#swap, make sure (x0,y0) is always out of the block
@@ -277,17 +306,59 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
                     if (c1&(0b0100)) == 0b0100:#down
                         y0 = y_min
                         if k != None:
-                            x0 = (y0-b)/k
+                            x0 = int((y0-b)/k)
                     elif (c1&(0b1000)) == 0b1000:#up
                         y0 = y_max
                         if k != None:
-                            x0 = (y0-b)/k
+                            x0 = int((y0-b)/k)
                     elif (c1&(0b0001)) == 0b0001:#left
                         x0 = x_min
-                        y0 = k*x0 + b
+                        y0 = int(k*x0+b)
                     elif (c1&(0b0010)) == 0b0010:#right
                         x0 = x_max
-                        y0 = k*x0 + b
-    #elif algorithm == 'Liang-Barsky':
-
+                        y0 = int(k*x0+b)
+    elif algorithm == 'Liang-Barsky':
+        p1 = -(x1-x0)
+        q1 = x0 - x_min
+        p2 = (x1-x0)
+        q2 = x_max - x0
+        p3 = -(y1-y0)
+        q3 = y0 - y_min
+        p4 = y1 - y0
+        q4 = y_max - y0
+        if (x1-x0) == 0:
+            if q1 < 0 or q2 < 0:
+                return result
+            elif q1 >0 and q2 > 0:
+                tmp = find_u(p1,q1,p2,q2,p3,q3,p4,q4)
+                umax = tmp[0]
+                umin = tmp[1]
+        elif (y1-y0) == 0:
+            if q3 < 0 or q4 < 0:
+                return result
+            elif q1 > 0 and q2 > 0:
+                tmp = find_u(p1,q1,p2,q2,p3,q3,p4,q4)
+                umax = tmp[0]
+                umin = tmp[1]
+        else:
+            tmp = find_u(p1,q1,p2,q2,p3,q3,p4,q4)
+            umax = tmp[0]
+            umin = tmp[1]
+        if umax > umin:
+            return result
+        elif umax < umin:
+            if umax != 0:
+                result.append((int(x0+umax*(x1-x0)),int(y0+umax*(y1-y0))))
+            else:
+                if x0>=x_min and x0<=x_max and y0>=y_min and y0<=y_max:
+                    result.append((x0,y0))
+                elif x1>=x_min and x1<=x_max and y1>=y_min and y1<=y_max:
+                    result.append((x1,y1))
+            if umin != 1:
+                result.append((int(x0+umin*(x1-x0)),int(y0+umin*(y1-y0))))
+            else:
+                if x0>=x_min and x0<=x_max and y0>=y_min and y0<=y_max:
+                    result.append((x0,y0))
+                elif x1>=x_min and x1<=x_max and y1>=y_min and y1<=y_max:
+                    result.append((x1,y1))
     return result
