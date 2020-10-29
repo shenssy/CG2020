@@ -170,7 +170,18 @@ def draw_curve(p_list, algorithm):
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
     result = []
-    
+    if algorithm == 'Bezier':
+        step = 1.0 / 10000
+        n = len(p_list)
+        t = 0.0
+        while t <= 1:
+            x = 0
+            y = 0
+            for i in range(len(p_list)):
+                x += (math.factorial(n)/(math.factorial(n-i)*math.factorial(i)))*p_list[i][0]*((1-t)**(n-i))*(t**i)
+                y += (math.factorial(n)/(math.factorial(n-i)*math.factorial(i)))*p_list[i][1]*((1-t)**(n-i))*(t**i)
+            result.append((int(x),int(y)))
+            t += step
     return result
 
 
