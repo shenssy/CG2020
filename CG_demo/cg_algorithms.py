@@ -69,15 +69,18 @@ def draw_line(p_list, algorithm):
             p_k = 2*d_y - d_x
             i = 0
             while i != d_x:
-                if p_k > 0:# d1>d2
-                    if k >= 0:
+                if k >= 0:
+                    if p_k > 0:
                         y += 1
                         p_k += (2*d_y-2*d_x)
                     else:
+                        p_k += 2*d_y
+                else:
+                    if p_k < 0:
                         y -= 1
                         p_k += (2*d_y+2*d_x)
-                else:
-                    p_k += 2*d_y
+                    else:
+                        p_k += 2*d_y
                 x += 1
                 result.append((x,y))
                 i += 1
@@ -112,7 +115,6 @@ def draw_polygon(p_list, algorithm):
     """
     result = []
     for i in range(len(p_list)):
-        #print((p_list[i-1],p_list[i]))
         line = draw_line([p_list[i - 1], p_list[i]], algorithm)
         result += line
     return result
@@ -212,8 +214,8 @@ def rotate(p_list, x, y, r):
     for i in p_list:
         new_x = i[0] - x #take (x,y) as (0,0)
         new_y = i[1] - y
-        res_x = new_x * math.cos(r) - new_y * math.sin(r)
-        res_y = new_x * math.sin(r) + new_y * math.cos(r)
+        res_x = new_x * math.cos(math.radians(r)) - new_y * math.sin(math.radians(r))
+        res_y = new_x * math.sin(math.radians(r)) + new_y * math.cos(math.radians(r))
         result.append((int(res_x + x), int(res_y + y)))
     return result
 
