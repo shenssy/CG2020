@@ -30,7 +30,7 @@ def draw_line(p_list, algorithm):
             k = None
         else:
             k = (y1 - y0) / (x1 - x0)
-        if k != None and ((abs(k) < 1 and x0 > x1) or (abs(k) >= 1 and y0 > y1)):
+        if (k == None and y0 > y1) or (k != None and ((abs(k) < 1 and x0 > x1) or (abs(k) >= 1 and y0 > y1))):
             x0, y0, x1, y1 = x1, y1, x0, y0
         if abs(x1-x0) >= abs(y1-y0):#choose the longer side to use the step of 1
             length = abs(x1-x0)
@@ -58,47 +58,46 @@ def draw_line(p_list, algorithm):
             k = None
         else:
             k = (y0-y1) / (x0-x1)
-        if k != None and ((abs(k) < 1 and x0 > x1) or (abs(k) >=1 and y0 > y1)):
+        if (k == None and y0 > y1) or (k != None and ((abs(k) < 1 and x0 > x1) or (abs(k) >= 1 and y0 > y1))):
             x0, y0, x1, y1 = x1, y1, x0, y0
         x = x0
         y = y0
-        d_x = abs(x1 - x0)
-        d_y = abs(y1 - y0)
+        d_x = x1 - x0
+        d_y = y1 - y0
         result.append((x,y))
         if k != None and abs(k) < 1:
-            y_pre = y0
             p_k = 2*d_y - d_x
             i = 0
             while i != d_x:
                 if p_k > 0:# d1>d2
-                    y_pre = y
                     if k >= 0:
                         y += 1
+                        p_k += (2*d_y-2*d_x)
                     else:
                         y -= 1
-                x += 1
-                if i != 0 and y_pre == y:
+                        p_k += (2*d_y+2*d_x)
+                else:
                     p_k += 2*d_y
-                elif i != 0 and y_pre + 1 == y:
-                    p_k += (2*d_y-2*d_x)
+                x += 1
                 result.append((x,y))
                 i += 1
         else:
-            x_pre = x0
-            p_k = 2*d_x - d_y
+            p_k = 2*d_y - d_x
             i = 0
             while i != d_y:
-                if p_k > 0:
-                    x_pre = x
-                    if k != None and k >= 0:
+                if k != None and k >= 0:
+                    if p_k < 0:
                         x += 1
+                        p_k += (2*d_y-2*d_x)
                     else:
+                        p_k += -2*d_x
+                else:
+                    if k != None and p_k > 0:
                         x -= 1
+                        p_k += (-2*d_y-2*d_x)
+                    else:
+                        p_k += -2*d_x
                 y += 1
-                if i != 0 and x_pre == x:
-                    p_k += 2*d_x
-                elif i != 0 and (x_pre + 1 == x or x_pre - 1 == x):
-                    p_k +=(2*d_x-2*d_y)
                 result.append((x,y))
                 i += 1
     return result
@@ -113,6 +112,7 @@ def draw_polygon(p_list, algorithm):
     """
     result = []
     for i in range(len(p_list)):
+        #print((p_list[i-1],p_list[i]))
         line = draw_line([p_list[i - 1], p_list[i]], algorithm)
         result += line
     return result
@@ -214,7 +214,7 @@ def rotate(p_list, x, y, r):
         new_y = i[1] - y
         res_x = new_x * math.cos(r) - new_y * math.sin(r)
         res_y = new_x * math.sin(r) + new_y * math.cos(r)
-        result.append((res_x + x, res_y + y))
+        result.append((int(res_x + x), int(res_y + y)))
     return result
 
 
@@ -231,7 +231,7 @@ def scale(p_list, x, y, s):
     for i in p_list:
         new_x = i[0] - x
         new_y = i[1] - y
-        result.append((new_x * s + x, new_y * s + y))
+        result.append((int(new_x * s + x), int(new_y * s + y)))
     return result
 
 
