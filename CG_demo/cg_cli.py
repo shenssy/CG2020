@@ -97,11 +97,12 @@ if __name__ == '__main__':
                 (item_dict[item_id])[1] = res
             elif line[0] == 'rotate':
                 item_id = line[1]
-                x = int(line[2])
-                y = int(line[3])
-                r = int(line[4])
-                res = alg.rotate((item_dict[item_id])[1],x,y,r)
-                (item_dict[item_id])[1] = res
+                if(item_dict[item_id][0]!='ellipse'):#not for ellipse
+                    x = int(line[2])
+                    y = int(line[3])
+                    r = int(line[4])
+                    res = alg.rotate((item_dict[item_id])[1],x,y,r)
+                    (item_dict[item_id])[1] = res
             elif line[0] == 'scale':
                 item_id = line[1]
                 x = int(line[2])

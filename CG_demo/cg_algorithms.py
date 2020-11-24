@@ -135,31 +135,32 @@ def draw_ellipse(p_list):
     b = abs(y0 - y_mid)
     x = 0
     y = b
-    result.append((int(x),int(y)))
+    result.append((int(x + x_mid),int(y + y_mid)))
     p = b*b - a*a*b + a*a/4
     while b*b*x < a*a*y:
         if p < 0:
             p += 2*b*b*x + 3*b*b
+            #p = b*b*(x+1)*(x+1)+a*a*(y-0.5)*(y-0.5)-a*a*b*b
         else:
             p += 2*b*b*x - 2*a*a*y + 2*a*a + 3*b*b
             y -= 1
         x += 1
         result.append((int(x + x_mid),int(y + y_mid)))
-        result.append((int(-x - x_mid),int(y + y_mid)))
-        result.append((int(x + x_mid),int(-y - y_mid)))
-        result.append((int(-x - x_mid),int(-y - y_mid)))
+        result.append((int(-x + x_mid),int(y + y_mid)))
+        result.append((int(x + x_mid),int(-y + y_mid)))
+        result.append((int(-x + x_mid),int(-y + y_mid)))
     p = b*b*(x+1/2)*(x+1/2)+a*a*(y-1)*(y-1)-a*a*b*b
     while y >= 0:
         if p <= 0:
-            p += -2*a*a*y + 3*a*a
+            p += 2*b*b*x - 2*a*a*y + 2*b*b + 3*a*a
             x += 1
         else:
-            p += 2*b*b*x - 2*a*a*y + 2*b*b + 3*a*a
+            p += -2*a*a*y + 3*a*a
         y -= 1
         result.append((int(x + x_mid),int(y + y_mid)))
-        result.append((int(-x - x_mid),int(y + y_mid)))
-        result.append((int(x + x_mid),int(-y - y_mid)))
-        result.append((int(-x - x_mid),int(-y - y_mid)))
+        result.append((int(-x + x_mid),int(y + y_mid)))
+        result.append((int(x + x_mid),int(-y + y_mid)))
+        result.append((int(-x + x_mid),int(-y + y_mid)))
     return result
 
 
