@@ -140,7 +140,6 @@ def draw_ellipse(p_list):
     while b*b*x < a*a*y:
         if p < 0:
             p += 2*b*b*x + 3*b*b
-            #p = b*b*(x+1)*(x+1)+a*a*(y-0.5)*(y-0.5)-a*a*b*b
         else:
             p += 2*b*b*x - 2*a*a*y + 2*a*a + 3*b*b
             y -= 1
@@ -185,6 +184,8 @@ def draw_curve(p_list, algorithm):
                 y += (math.factorial(n)/(math.factorial(n-i)*math.factorial(i)))*p_list[i][1]*((1-t)**(n-i))*(t**i)
             result.append((int(x),int(y)))
             t += step
+    #elif algorithm == 'B-spline':
+
     return result
 
 
