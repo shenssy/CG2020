@@ -173,7 +173,7 @@ def draw_curve(p_list, algorithm):
     """
     result = []
     if algorithm == 'Bezier':
-        step = 1.0 / 10000
+        '''step = 1.0 / 10000
         n = len(p_list)
         t = 0.0
         while t <= 1:
@@ -183,6 +183,29 @@ def draw_curve(p_list, algorithm):
                 x += (math.factorial(n)/(math.factorial(n-i)*math.factorial(i)))*p_list[i][0]*((1-t)**(n-i))*(t**i)
                 y += (math.factorial(n)/(math.factorial(n-i)*math.factorial(i)))*p_list[i][1]*((1-t)**(n-i))*(t**i)
             result.append((int(x),int(y)))
+            t += step'''
+        n = len(p_list)
+        list_x = [0]*(n-1)
+        list_y = [0]*(n-1)
+        x, y = p_list[0]
+        step = 1.0 / 10000#精度
+        t = 0.0
+        while t <= 1:
+            i = 1
+            while i <= n:
+                j = 0
+                while j < (n - i):
+                    if i == 1:#the first time
+                        list_x[j] = (1-t)*p_list[j][0] + t*p_list[j+1][0]
+                        list_y[j] = (1-t)*p_list[j][1] + t*p_list[j+1][1]
+                    else:
+                        list_x[j] = (1-t)*list_x[j] + t*list_x[j+1]
+                        list_y[j] = (1-t)*list_y[j] + t*list_y[j+1]
+                    j+=1
+                i+=1
+            result.append((int(x),int(y)))
+            x = list_x[0]
+            y = list_y[0]
             t += step
     #elif algorithm == 'B-spline':
 
