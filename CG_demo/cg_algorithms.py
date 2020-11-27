@@ -163,7 +163,6 @@ def draw_ellipse(p_list):
     return result
 
 
-
 def draw_curve(p_list, algorithm):
     """绘制曲线
 
@@ -172,6 +171,7 @@ def draw_curve(p_list, algorithm):
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
     result = []
+    step = 1.0 / 10000#精度
     if algorithm == 'Bezier':
         '''step = 1.0 / 10000
         n = len(p_list)
@@ -188,7 +188,6 @@ def draw_curve(p_list, algorithm):
         list_x = [0]*(n-1)
         list_y = [0]*(n-1)
         x, y = p_list[0]
-        step = 1.0 / 10000#精度
         t = 0.0
         while t <= 1:
             i = 1
@@ -207,8 +206,42 @@ def draw_curve(p_list, algorithm):
             x = list_x[0]
             y = list_y[0]
             t += step
-    #elif algorithm == 'B-spline':
-
+    elif algorithm == 'B-spline':
+        n = len(p_list)-1
+        k = 3
+        T = []
+        tmp = (10-1)/(n+k)
+        start = 1
+        while start <= 10:
+            T.append(start)
+            start += tmp
+        def de_x(r,t,i):
+            if r == 0:
+                return p_list[i][0]
+            else:
+                if T[i+k-r]-T[i] == 0 and T[i+k-r]-T[i] != 0:
+                    return ((T[i+k-r]-t)/(T[i+k-r]-T[i]))*de_x(r-1,t,i-1)
+                elif T[i+k-r]-T[i] != 0 and T[i+k-r]-T[i] == 0:
+                    return ((t-T[i])/(T[i+k-r]-T[i]))*de_x(r-1,t,i)
+                elif T[i+k-r]-T[i] == 0 and T[i+k-r]-T[i] == 0:
+                    return 0
+                return ((t-T[i])/(T[i+k-r]-T[i]))*de_x(r-1,t,i)+((T[i+k-r]-t)/(T[i+k-r]-T[i]))*de_x(r-1,t,i-1)
+        def de_y(r,t,i):
+            if r == 0:
+                return p_list[i][1]
+            else:
+                if T[i+k-r]-T[i] == 0 and T[i+k-r]-T[i] != 0:
+                    return ((T[i+k-r]-t)/(T[i+k-r]-T[i]))*de_y(r-1,t,i-1)
+                elif T[i+k-r]-T[i] != 0 and T[i+k-r]-T[i] == 0:
+                    return ((t-T[i])/(T[i+k-r]-T[i]))*de_y(r-1,t,i)
+                elif T[i+k-r]-T[i] == 0 and T[i+k-r]-T[i] == 0:
+                    return 0
+                return ((t-T[i])/(T[i+k-r]-T[i]))*de_y(r-1,t,i)+((T[i+k-r]-t)/(T[i+k-r]-T[i]))*de_y(r-1,t,i-1)
+        for j in range(k-1,n+1):
+            t = T[j]
+            while t <= T[j+1]:
+                result.append((int(de_x(k-1,tmp,j)),int(de_y(k-1,tmp,j))))
+                t += step
     return result
 
 
