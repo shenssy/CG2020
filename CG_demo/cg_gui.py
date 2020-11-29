@@ -39,6 +39,34 @@ class MyCanvas(QGraphicsView):
         self.status = 'line'
         self.temp_algorithm = algorithm
         self.temp_id = item_id
+    
+    #todo
+    def start_draw_polygon(self, algorithm, item_id):
+        self.status = 'polygon'
+        self.temp_algorithm = algorithm
+        self.temp_id = item_id
+    
+    def start_draw_ellipse(self, item_id):
+        self.status = 'ellipse'
+        self.temp_id = item_id
+    
+    def start_draw_curve(self, algorithm, item_id):
+        self.status = 'curve'
+        self.temp_algorithm = algorithm
+        self.temp_id = item_id
+    
+    def start_translate(self, item_id):
+        self.temp_id = item_id
+    
+    def start_rotate(self, item_id):
+        self.temp_id = item_id
+
+    def start_scale(self, item_id):
+        self.temp_id = item_id
+    
+    def start_clip(self, algorithm, item_id):
+        self.temp_algorithm = algorithm
+        self.temp_id = item_id
 
     def finish_draw(self):
         self.temp_id = self.main_window.get_id()
@@ -208,6 +236,19 @@ class MainWindow(QMainWindow):
         # 连接信号和槽函数
         exit_act.triggered.connect(qApp.quit)
         line_naive_act.triggered.connect(self.line_naive_action)
+        #todo
+        line_dda_act.triggered.connect(self.line_dda_action)
+        line_bresenham_act.triggered.connect(self.line_bresenham_action)
+        polygon_dda_act.triggered.connect(self.polygon_dda_action)
+        polygon_bresenham_act.triggered.connect(self.polygon_bresenham_action)
+        ellipse_act.triggered.connect(self.ellipse_action)
+        curve_bezier_act.triggered.connect(self.curve_bezier_action)
+        curve_b_spline_act.triggered.connect(self.curve_b_spline_action)
+        translate_act.triggered.connect(self.translate_action)
+        rotate_act.triggered.connect(self.rotate_action)
+        scale_act.triggered.connect(self.scale_action)
+        clip_cohen_sutherland_act.triggered.connect(self.clip_cohen_sutherland_action)
+        clip_liang_barsky_act.triggered.connect(self.clip_liang_barsky_action)
         self.list_widget.currentTextChanged.connect(self.canvas_widget.selection_changed)
 
         # 设置主窗口的布局
@@ -229,6 +270,78 @@ class MainWindow(QMainWindow):
     def line_naive_action(self):
         self.canvas_widget.start_draw_line('Naive', self.get_id())
         self.statusBar().showMessage('Naive算法绘制线段')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def line_dda_action(self):
+        self.canvas_widget.start_draw_line('DDA', self.get_id())
+        self.statusBar().showMessage('DDA算法绘制线段')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def line_bresenham_action(self):
+        self.canvas_widget.start_draw_line('Bresenham', self.get_id())
+        self.statusBar().showMessage('Bresenham算法绘制线段')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def polygon_dda_action(self):
+        self.canvas_widget.start_draw_polygon('DDA', self.get_id())
+        self.statusBar().showMessage('DDA算法绘制多边形')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def polygon_bresenham_action(self):
+        self.canvas_widget.start_draw_polygon('Bresenham', self.get_id())
+        self.statusBar().showMessage('Bresenham算法绘制多边形')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def ellipse_action(self):
+        self.canvas_widget.start_draw_ellipse(self.get_id())
+        self.statusBar().showMessage('绘制椭圆')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def curve_bezier_action(self):
+        self.canvas_widget.start_draw_curve('Bezier', self.get_id())
+        self.statusBar().showMessage('Bezier算法绘制曲线')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def curve_b_spline_action(self):
+        self.canvas_widget.start_draw_curve('B-spline', self.get_id())
+        self.statusBar().showMessage('B-spline算法绘制曲线')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def translate_action(self):
+        self.canvas_widget.start_translate(self.get_id())
+        self.statusBar().showMessage('平移变换')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def rotate_action(self):
+        self.canvas_widget.start_rotate(self.get_id())
+        self.statusBar().showMessage('旋转变换')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def scale_action(self):
+        self.canvas_widget.start_scale(self.get_id())
+        self.statusBar().showMessage('旋转变换')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def clip_cohen_sutherland_action(self):
+        self.canvas_widget.start_clip('Cohen-Sutherland', self.get_id())
+        self.statusBar().showMessage('Cohen-Sutherland算法线段裁剪')
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
+    
+    def clip_liang_barsky_action(self):
+        self.canvas_widget.start_clip('Liang-Barsky', self.get_id())
+        self.statusBar().showMessage('Liang-Barsky算法线段裁剪')
         self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
 

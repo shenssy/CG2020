@@ -210,13 +210,14 @@ def draw_curve(p_list, algorithm):
         n = len(p_list)-1
         k = 3
         T = []
-        tmp = (10-1)/(n+k)
+        tmp = (10.0-1.0)/(n+k+1)
         start = 1
         while start <= 10:
             T.append(start)
             start += tmp
-        def de_x(r,t,i):
+        '''def de_x(r,t,i):
             if r == 0:
+                #print("r==0")
                 return p_list[i][0]
             else:
                 if T[i+k-r]-T[i] == 0 and T[i+k-r]-T[i] != 0:
@@ -241,7 +242,15 @@ def draw_curve(p_list, algorithm):
             t = T[j]
             while t <= T[j+1]:
                 result.append((int(de_x(k-1,tmp,j)),int(de_y(k-1,tmp,j))))
-                t += step
+                print(k-1,tmp,j)
+                t += step'''
+        for i in range(0,n-3):
+            for j in range(0,2000):
+                u = float(j)/1000
+                x = (1.0/6.0)*((-u*u*u+3*u*u-3*u+1)*p_list[i][0]+(3*u*u*u-6*u*u+4)*p_list[i+1][0]+(-3*u*u*u+3*u*u+3*u+1)*p_list[i+2][0]+u*u*u*p_list[i+3][0])
+                y = (1.0/6.0)*((-u*u*u+3*u*u-3*u+1)*p_list[i][1]+(3*u*u*u-6*u*u+4)*p_list[i+1][1]+(-3*u*u*u+3*u*u+3*u+1)*p_list[i+2][1]+u*u*u*p_list[i+3][1])
+                #print((int(x),int(y)))
+                result.append((int(x),int(y)))
     return result
 
 
