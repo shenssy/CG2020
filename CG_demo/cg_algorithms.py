@@ -39,7 +39,11 @@ def draw_line(p_list, algorithm):
         if k == None:
             d_x = 0
         else:
+            if length == 0:
+                return result
             d_x = (x1-x0) / length
+        if length == 0:
+            return result
         d_y = (y1-y0) / length
         x = x0 + 0.5
         y = y0 + 0.5 #plus 0.5 for correct round off
@@ -173,17 +177,6 @@ def draw_curve(p_list, algorithm):
     result = []
     step = 1.0 / 10000#精度
     if algorithm == 'Bezier':
-        '''step = 1.0 / 10000
-        n = len(p_list)
-        t = 0.0
-        while t <= 1:
-            x = 0
-            y = 0
-            for i in range(len(p_list)):
-                x += (math.factorial(n)/(math.factorial(n-i)*math.factorial(i)))*p_list[i][0]*((1-t)**(n-i))*(t**i)
-                y += (math.factorial(n)/(math.factorial(n-i)*math.factorial(i)))*p_list[i][1]*((1-t)**(n-i))*(t**i)
-            result.append((int(x),int(y)))
-            t += step'''
         n = len(p_list)
         list_x = [0]*(n-1)
         list_y = [0]*(n-1)

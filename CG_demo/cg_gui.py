@@ -57,7 +57,7 @@ class MyCanvas(QGraphicsView):
     
     def start_translate(self, item_id):
         self.temp_id = item_id
-    
+
     def start_rotate(self, item_id):
         self.temp_id = item_id
 
@@ -101,6 +101,7 @@ class MyCanvas(QGraphicsView):
         pos = self.mapToScene(event.localPos().toPoint())
         x = int(pos.x())
         y = int(pos.y())
+        #print("pos",x,y)
         if self.status == 'line':
             self.temp_item.p_list[1] = [x, y]
         self.updateScene([self.sceneRect()])
@@ -264,6 +265,7 @@ class MainWindow(QMainWindow):
 
     def get_id(self):
         _id = str(self.item_cnt)
+        #print(_id)
         self.item_cnt += 1
         return _id
 
