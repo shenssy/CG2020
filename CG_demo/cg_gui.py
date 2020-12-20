@@ -41,6 +41,9 @@ class MyCanvas(QGraphicsView):
         self.temp_id = item_id
     
     #todo
+    #def start_reset_canvas(self):
+
+
     def start_draw_polygon(self, algorithm, item_id):
         self.status = 'polygon'
         self.temp_algorithm = algorithm
@@ -57,16 +60,20 @@ class MyCanvas(QGraphicsView):
     
     def start_translate(self, item_id):
         self.temp_id = item_id
+        self.status = 'translate'
 
     def start_rotate(self, item_id):
         self.temp_id = item_id
+        self.status = 'rotate'
 
     def start_scale(self, item_id):
         self.temp_id = item_id
+        self.status = 'scale'
     
     def start_clip(self, algorithm, item_id):
         self.temp_algorithm = algorithm
         self.temp_id = item_id
+        self.status = 'clip'
 
     def finish_draw(self):
         self.temp_id = self.main_window.get_id()
@@ -91,9 +98,14 @@ class MyCanvas(QGraphicsView):
         pos = self.mapToScene(event.localPos().toPoint())
         x = int(pos.x())
         y = int(pos.y())
-        if self.status == 'line':
+        if self.status == 'line' or self.status == 'ellipse':
             self.temp_item = MyItem(self.temp_id, self.status, [[x, y], [x, y]], self.temp_algorithm)
             self.scene().addItem(self.temp_item)
+        #todo
+        elif self.status == 'translate':
+            self.temp_item.x_now = x
+            self.temp_item.y_now = y
+
         self.updateScene([self.sceneRect()])
         super().mousePressEvent(event)
 
@@ -102,16 +114,25 @@ class MyCanvas(QGraphicsView):
         x = int(pos.x())
         y = int(pos.y())
         #print("pos",x,y)
-        if self.status == 'line':
+        if self.status == 'line' or self.status == 'ellipse':
             self.temp_item.p_list[1] = [x, y]
+        #todo
+        elif self.status == 'translate':
+            self.temp_item.p_list = alg.translate(self.temp_item.p_list, x-self.temp_item.x_now,y-self.temp_item.y_now)
+            self.temp_item.x_now = x
+            self.temp_item.y_now = y
+
         self.updateScene([self.sceneRect()])
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        if self.status == 'line':
+        if self.status == 'line' or self.status == 'ellipse':
             self.item_dict[self.temp_id] = self.temp_item
             self.list_widget.addItem(self.temp_id)
             self.finish_draw()
+        #todo
+        #elif self.status == 'translate':
+            #self.clear_selection()
         super().mouseReleaseEvent(event)
 
 
@@ -134,6 +155,9 @@ class MyItem(QGraphicsItem):
         self.p_list = p_list        # 图元参数
         self.algorithm = algorithm  # 绘制算法，'DDA'、'Bresenham'、'Bezier'、'B-spline'等
         self.selected = False
+
+        self.x_now = p_list[0][0] 
+        self.y_now = p_list[0][1]
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         if self.item_type == 'line':
@@ -238,6 +262,8 @@ class MainWindow(QMainWindow):
         exit_act.triggered.connect(qApp.quit)
         line_naive_act.triggered.connect(self.line_naive_action)
         #todo
+        #set_pen_act.triggered.connect(self,set_pen_action)
+        #reset_canvas_act.triggered.connect(self.reset_canvas_action)
         line_dda_act.triggered.connect(self.line_dda_action)
         line_bresenham_act.triggered.connect(self.line_bresenham_action)
         polygon_dda_act.triggered.connect(self.polygon_dda_action)
@@ -268,6 +294,17 @@ class MainWindow(QMainWindow):
         #print(_id)
         self.item_cnt += 1
         return _id
+
+    #def set_pen_action(self):
+
+
+    '''def reset_canvas_action(self):
+        del self.canvas_widget
+        self.canvas_widget = MyCanvas(self.scene, self)
+        self.canvas_widget.setFixedSize(600, 600)
+        self.canvas_widget.main_window = self
+        self.canvas_widget.list_widget = self.list_widget
+        self.statusBar().showMessage('重置画布')'''
 
     def line_naive_action(self):
         self.canvas_widget.start_draw_line('Naive', self.get_id())
