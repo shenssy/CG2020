@@ -200,46 +200,11 @@ def draw_curve(p_list, algorithm):
             y = list_y[0]
             t += step
     elif algorithm == 'B-spline':
-        n = len(p_list)-1
+        n = len(p_list)
         k = 3
-        T = []
-        tmp = (10.0-1.0)/(n+k+1)
-        start = 1
-        while start <= 10:
-            T.append(start)
-            start += tmp
-        '''def de_x(r,t,i):
-            if r == 0:
-                #print("r==0")
-                return p_list[i][0]
-            else:
-                if T[i+k-r]-T[i] == 0 and T[i+k-r]-T[i] != 0:
-                    return ((T[i+k-r]-t)/(T[i+k-r]-T[i]))*de_x(r-1,t,i-1)
-                elif T[i+k-r]-T[i] != 0 and T[i+k-r]-T[i] == 0:
-                    return ((t-T[i])/(T[i+k-r]-T[i]))*de_x(r-1,t,i)
-                elif T[i+k-r]-T[i] == 0 and T[i+k-r]-T[i] == 0:
-                    return 0
-                return ((t-T[i])/(T[i+k-r]-T[i]))*de_x(r-1,t,i)+((T[i+k-r]-t)/(T[i+k-r]-T[i]))*de_x(r-1,t,i-1)
-        def de_y(r,t,i):
-            if r == 0:
-                return p_list[i][1]
-            else:
-                if T[i+k-r]-T[i] == 0 and T[i+k-r]-T[i] != 0:
-                    return ((T[i+k-r]-t)/(T[i+k-r]-T[i]))*de_y(r-1,t,i-1)
-                elif T[i+k-r]-T[i] != 0 and T[i+k-r]-T[i] == 0:
-                    return ((t-T[i])/(T[i+k-r]-T[i]))*de_y(r-1,t,i)
-                elif T[i+k-r]-T[i] == 0 and T[i+k-r]-T[i] == 0:
-                    return 0
-                return ((t-T[i])/(T[i+k-r]-T[i]))*de_y(r-1,t,i)+((T[i+k-r]-t)/(T[i+k-r]-T[i]))*de_y(r-1,t,i-1)
-        for j in range(k-1,n+1):
-            t = T[j]
-            while t <= T[j+1]:
-                result.append((int(de_x(k-1,tmp,j)),int(de_y(k-1,tmp,j))))
-                print(k-1,tmp,j)
-                t += step'''
-        for i in range(0,n-3):
+        for i in range(0,n-k):
             for j in range(0,2000):
-                u = float(j)/1000
+                u = float(j)/2000
                 x = (1.0/6.0)*((-u*u*u+3*u*u-3*u+1)*p_list[i][0]+(3*u*u*u-6*u*u+4)*p_list[i+1][0]+(-3*u*u*u+3*u*u+3*u+1)*p_list[i+2][0]+u*u*u*p_list[i+3][0])
                 y = (1.0/6.0)*((-u*u*u+3*u*u-3*u+1)*p_list[i][1]+(3*u*u*u-6*u*u+4)*p_list[i+1][1]+(-3*u*u*u+3*u*u+3*u+1)*p_list[i+2][1]+u*u*u*p_list[i+3][1])
                 #print((int(x),int(y)))
