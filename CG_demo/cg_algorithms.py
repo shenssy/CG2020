@@ -45,8 +45,8 @@ def draw_line(p_list, algorithm):
         if length == 0:
             return result
         d_y = (y1-y0) / length
-        x = x0 + 0.5
-        y = y0 + 0.5 #plus 0.5 for correct round off
+        x = x0 #+ 0.5
+        y = y0 #+ 0.5 #plus 0.5 for correct round off
         i = 0
         while(i != length):
             result.append((int(x),int(y)))
@@ -57,6 +57,7 @@ def draw_line(p_list, algorithm):
                 x += 1
                 y += d_y
             i += 1
+        result.append((int(x1), int(y1)))
     elif algorithm == 'Bresenham':
         if x0 == x1:
             k = None
@@ -72,7 +73,7 @@ def draw_line(p_list, algorithm):
         if k != None and abs(k) < 1:
             p_k = 2*d_y - d_x
             i = 0
-            while i != d_x:
+            while i != d_x :
                 if k >= 0:
                     if p_k > 0:
                         y += 1
@@ -91,7 +92,7 @@ def draw_line(p_list, algorithm):
         else:
             p_k = 2*d_y - d_x
             i = 0
-            while i != d_y:
+            while i != d_y :
                 if k != None and k >= 0:
                     if p_k < 0:
                         x += 1
@@ -107,6 +108,7 @@ def draw_line(p_list, algorithm):
                 y += 1
                 result.append((x,y))
                 i += 1
+        #result.append((x1,y1))
     return result
 
 
@@ -153,7 +155,7 @@ def draw_ellipse(p_list):
         result.append((int(x + x_mid),int(-y + y_mid)))
         result.append((int(-x + x_mid),int(-y + y_mid)))
     p = b*b*(x+1/2)*(x+1/2)+a*a*(y-1)*(y-1)-a*a*b*b
-    while y >= 0:
+    while y > 0:
         if p <= 0:
             p += 2*b*b*x - 2*a*a*y + 2*b*b + 3*a*a
             x += 1
