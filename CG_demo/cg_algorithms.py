@@ -45,8 +45,9 @@ def draw_line(p_list, algorithm):
         if length == 0:
             return result
         d_y = (y1-y0) / length
-        x = x0 #+ 0.5
-        y = y0 #+ 0.5 #plus 0.5 for correct round off
+        result.append((x0,y0))
+        x = x0 + 0.5
+        y = y0 + 0.5 #plus 0.5 for correct round off
         i = 0
         while(i != length):
             result.append((int(x),int(y)))
@@ -66,47 +67,53 @@ def draw_line(p_list, algorithm):
         if (k == None and y0 > y1) or (k != None and ((abs(k) < 1 and x0 > x1) or (abs(k) >= 1 and y0 > y1))):
             x0, y0, x1, y1 = x1, y1, x0, y0
         x = x0
-        y = y0
+        y = y0 
+        #result.append((x,y))
         d_x = x1 - x0
         d_y = y1 - y0
-        result.append((x,y))
         if k != None and abs(k) < 1:
-            p_k = 2*d_y - d_x
+            if k >= 0:
+                p_k = - d_x
+            else:
+                p_k = d_x
             i = 0
-            while i != d_x :
+            while i != d_x + 1:
+                result.append((x,y))
                 if k >= 0:
-                    if p_k > 0:
+                    if p_k >= 0:
                         y += 1
                         p_k += (2*d_y-2*d_x)
                     else:
                         p_k += 2*d_y
                 else:
-                    if p_k < 0:
+                    if p_k <= 0:
                         y -= 1
                         p_k += (2*d_y+2*d_x)
                     else:
                         p_k += 2*d_y
                 x += 1
-                result.append((x,y))
                 i += 1
         else:
-            p_k = 2*d_y - d_x
+            if k != None and k >= 0:
+                p_k = -d_y
+            else:
+                p_k = d_y
             i = 0
-            while i != d_y :
-                if k != None and k >= 0:
-                    if p_k < 0:
-                        x += 1
-                        p_k += (2*d_y-2*d_x)
-                    else:
-                        p_k += -2*d_x
-                else:
-                    if k != None and p_k > 0:
-                        x -= 1
-                        p_k += (-2*d_y-2*d_x)
-                    else:
-                        p_k += -2*d_x
-                y += 1
+            while i != d_y + 1:
                 result.append((x,y))
+                if k != None and k >= 0:
+                    if p_k >= 0:
+                        x += 1
+                        p_k += (-2*d_y+2*d_x)
+                    else:
+                        p_k += 2*d_x
+                else:
+                    if k != None and p_k <= 0:
+                        x -= 1
+                        p_k += 2*d_y+2*d_x
+                    else:
+                        p_k += 2*d_x
+                y += 1
                 i += 1
         #result.append((x1,y1))
     return result
