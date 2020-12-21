@@ -68,20 +68,16 @@ def draw_line(p_list, algorithm):
             x0, y0, x1, y1 = x1, y1, x0, y0
         x = x0
         y = y0 
-        #result.append((x,y))
+        result.append((x,y))
         d_x = x1 - x0
         d_y = y1 - y0
         if k != None and abs(k) <= 1:
             if k >= 0:
-                p_k = - d_x
+                p_k = - d_x + 2*d_y
             else:
-                p_k = d_x
-            if abs(k) == 1:
-                p_k += 2*d_y
+                p_k = d_x + 2*d_y
             i = 0
-            while i != d_x + 1:
-                #if abs(k) != 1 or i != 0:
-                result.append((x,y))
+            while i != d_x:
                 if k >= 0:
                     if p_k >= 0:
                         y += 1
@@ -95,15 +91,15 @@ def draw_line(p_list, algorithm):
                     else:
                         p_k += 2*d_y
                 x += 1
+                result.append((x,y))
                 i += 1
         else:
             if k != None and k >= 0:
-                p_k = -d_y
+                p_k = -d_y+2*d_x
             else:
-                p_k = d_y
+                p_k = d_y+2*d_x
             i = 0
-            while i != d_y + 1:
-                result.append((x,y))
+            while i != d_y:
                 if k != None and k >= 0:
                     if p_k >= 0:
                         x += 1
@@ -117,6 +113,7 @@ def draw_line(p_list, algorithm):
                     else:
                         p_k += 2*d_x
                 y += 1
+                result.append((x,y))
                 i += 1
     return result
 
