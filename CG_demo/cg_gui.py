@@ -36,10 +36,13 @@ class MyCanvas(QGraphicsView):
         self.temp_id = ''
         self.temp_item = None
 
+        self.type = ''
+
     def start_draw_line(self, algorithm, item_id):
         self.status = 'line'
         self.temp_algorithm = algorithm
         self.temp_id = item_id
+        self.type = 'line'
     
     #todo
     #def start_reset_canvas(self):
@@ -49,22 +52,25 @@ class MyCanvas(QGraphicsView):
         self.status = 'polygon'
         self.temp_algorithm = algorithm
         self.temp_id = item_id
+        self.type = 'polygon'
     
     def start_draw_ellipse(self, item_id):
         self.status = 'ellipse'
         self.temp_id = item_id
+        self.type = 'ellipse'
     
     def start_draw_curve(self, algorithm, item_id):
         self.status = 'curve'
         self.temp_algorithm = algorithm
         self.temp_id = item_id
+        self.type = 'curve'
     
     def start_translate(self, item_id):
         self.temp_id = item_id
         self.status = 'translate'
 
     def start_rotate(self, item_id):
-        if self.status != 'ellipse':#except ellipse
+        if self.type != 'ellipse':#except ellipse
             self.temp_id = item_id
             self.status = 'rotate'
 
@@ -73,9 +79,10 @@ class MyCanvas(QGraphicsView):
         self.status = 'scale'
     
     def start_clip(self, algorithm, item_id):
-        self.temp_algorithm = algorithm
-        self.temp_id = item_id
-        self.status = 'clip'
+        if self.type == 'line':
+            self.temp_algorithm = algorithm
+            self.temp_id = item_id
+            self.status = 'clip'
 
     def finish_draw(self):
         self.temp_id = self.main_window.get_id()
@@ -131,6 +138,15 @@ class MyCanvas(QGraphicsView):
             self.temp_item.p_list = alg.rotate(self.temp_item.p_list,x,y,0)
             self.temp_item.rotate_x = x
             self.temp_item.rotate_y = y
+        elif self.status == 'scale':
+            self.temp_item.p_list = alg.scale(self.temp_item.p_list, x, y, 1)
+            self.temp_item.scale_x = x
+            self.temp_item.scale_y = y
+        elif self.status == 'clip':
+            self.temp_item.one_x = x
+            self.temp_item.one_y = y
+
+            
         self.updateScene([self.sceneRect()])
         super().mousePressEvent(event)
 
@@ -147,6 +163,9 @@ class MyCanvas(QGraphicsView):
             self.temp_item.x_now = x
             self.temp_item.y_now = y
             self.clear_selection()
+        elif self.status == 'clip':
+            self.temp_item.two_x = x
+            self.temp_item.two_y = y
 
         self.updateScene([self.sceneRect()])
         super().mouseMoveEvent(event)
@@ -157,8 +176,9 @@ class MyCanvas(QGraphicsView):
             self.list_widget.addItem(self.temp_id)
             self.finish_draw()
         #todo
-        #elif self.status == 'translate':
-            #self.clear_selection()
+        elif self.status == 'clip':
+            self.temp_item.p_list = alg.clip(self.temp_item.p_list, self.temp_item.one_x, self.temp_item.one_y, self.temp_item.two_x, self.temp_item.two_y, self.temp_algorithm)
+        self.updateScene([self.sceneRect()])
         super().mouseReleaseEvent(event)
     
     def wheelEvent(self, event: QWheelEvent) -> None:
@@ -167,6 +187,11 @@ class MyCanvas(QGraphicsView):
                 self.temp_item.p_list = alg.rotate(self.temp_item.p_list,self.temp_item.rotate_x,self.temp_item.rotate_y,5)
             else:
                 self.temp_item.p_list = alg.rotate(self.temp_item.p_list,self.temp_item.rotate_x,self.temp_item.rotate_y,355)
+        elif self.status == 'scale' and self.temp_item.scale_x != None and self.temp_item.scale_y !=None:
+            if event.angleDelta().y() < 0:#down
+                self.temp_item.p_list = alg.scale(self.temp_item.p_list,self.temp_item.scale_x, self.temp_item.scale_y, 0.9)
+            else:
+                self.temp_item.p_list = alg.scale(self.temp_item.p_list,self.temp_item.scale_x, self.temp_item.scale_y, 1.1)
         self.updateScene([self.sceneRect()])
         super().wheelEvent(event)
 
@@ -194,6 +219,12 @@ class MyItem(QGraphicsItem):
         self.y_now = p_list[0][1]#for translate
         self.rotate_x = None
         self.rotate_y = None #for rotate
+        self.scale_x = None
+        self.scale_y = None #for scale
+        self.one_x = None
+        self.one_y = None #the first point of clip
+        self.two_x = None
+        self.two_y = None #the second point of clip
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         if self.item_type == 'line':

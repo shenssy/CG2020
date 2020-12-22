@@ -148,6 +148,7 @@ def draw_ellipse(p_list):
     x = 0
     y = b
     result.append((int(x + x_mid),int(y + y_mid)))
+    result.append((int(x + x_mid),int(y_mid - y)))
     p = b*b - a*a*b + a*a/4
     while b*b*x < a*a*y:
         if p < 0:
@@ -315,8 +316,22 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
     result = []
-    x0, y0 = p_list[0]
-    x1, y1 = p_list[1]
+    if p_list[0][0] <= p_list[1][0] and p_list[0][1] <= p_list[1][1]:#start with left_up
+        x0, y0 = p_list[0]
+        x1, y1 = p_list[1]
+    elif p_list[0][0] > p_list[1][0] and p_list[0][1] > p_list[1][1]:#start with right_down
+        x0, y0 = p_list[1]
+        x1, y1 = p_list[0]
+    elif p_list[0][0] <= p_list[1][0] and p_list[0][1] >= p_list[1][1]:#start with left_down
+        x0 = p_list[0][0]
+        y0 = p_list[1][1]
+        x1 = p_list[1][0]
+        y1 = p_list[0][1]
+    elif p_list[0][0] > p_list[1][0] and p_list[0][1] < p_list[1][1]:#start with right_up
+        x0 = p_list[1][0]
+        y0 = p_list[0][1]
+        x1 = p_list[0][0]
+        y1 = p_list[1][1]
     if algorithm == 'Cohen-Sutherland':
         flag = 0 #need to break out of the loop or not
         while flag == 0:
