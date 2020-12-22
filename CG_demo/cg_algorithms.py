@@ -212,8 +212,8 @@ def draw_curve(p_list, algorithm):
         n = len(p_list)
         k = 3
         for i in range(0,n-k):
-            for j in range(0,2000):
-                u = float(j)/2000
+            for j in range(0,1000):
+                u = float(j)/1000
                 x = (1.0/6.0)*((-u*u*u+3*u*u-3*u+1)*p_list[i][0]+(3*u*u*u-6*u*u+4)*p_list[i+1][0]+(-3*u*u*u+3*u*u+3*u+1)*p_list[i+2][0]+u*u*u*p_list[i+3][0])
                 y = (1.0/6.0)*((-u*u*u+3*u*u-3*u+1)*p_list[i][1]+(3*u*u*u-6*u*u+4)*p_list[i+1][1]+(-3*u*u*u+3*u*u+3*u+1)*p_list[i+2][1]+u*u*u*p_list[i+3][1])
                 #print((int(x),int(y)))
@@ -315,23 +315,18 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :param algorithm: (string) 使用的裁剪算法，包括'Cohen-Sutherland'和'Liang-Barsky'
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
+    def func(a,b):
+        return b,a
     result = []
-    if p_list[0][0] <= p_list[1][0] and p_list[0][1] <= p_list[1][1]:#start with left_up
-        x0, y0 = p_list[0]
-        x1, y1 = p_list[1]
-    elif p_list[0][0] > p_list[1][0] and p_list[0][1] > p_list[1][1]:#start with right_down
-        x0, y0 = p_list[1]
-        x1, y1 = p_list[0]
-    elif p_list[0][0] <= p_list[1][0] and p_list[0][1] >= p_list[1][1]:#start with left_down
-        x0 = p_list[0][0]
-        y0 = p_list[1][1]
-        x1 = p_list[1][0]
-        y1 = p_list[0][1]
-    elif p_list[0][0] > p_list[1][0] and p_list[0][1] < p_list[1][1]:#start with right_up
-        x0 = p_list[1][0]
-        y0 = p_list[0][1]
-        x1 = p_list[0][0]
-        y1 = p_list[1][1]
+    x0, y0 = p_list[0]
+    x1, y1 = p_list[1]
+    if x_min > x_max and y_min > y_max:#start with right_down
+        x_min,x_max = func(x_min,x_max)
+        y_min,y_max = func(y_min,y_max)
+    elif x_min <= x_max and y_min >= y_max:#start with left_down
+        y_min,y_max = func(y_min,y_max)
+    elif x_min > x_max and y_min < y_max:#start with right_up
+        x_min,x_max = func(x_min,x_max)
     if algorithm == 'Cohen-Sutherland':
         flag = 0 #need to break out of the loop or not
         while flag == 0:

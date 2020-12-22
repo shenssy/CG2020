@@ -289,6 +289,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.item_cnt = 0
+        self.file_cnt = 1 #the filename of next export file
 
         # 使用QListWidget来记录已有的图元，并用于选择图元。注：这是图元选择的简单实现方法，更好的实现是在画布中直接用鼠标选择图元
         self.list_widget = QListWidget(self)
@@ -307,6 +308,7 @@ class MainWindow(QMainWindow):
         file_menu = menubar.addMenu('文件')
         set_pen_act = file_menu.addAction('设置画笔')
         reset_canvas_act = file_menu.addAction('重置画布')
+        save_canvas_act = file_menu.addAction('保存画布')
         exit_act = file_menu.addAction('退出')
         draw_menu = menubar.addMenu('绘制')
         line_menu = draw_menu.addMenu('线段')
@@ -333,7 +335,8 @@ class MainWindow(QMainWindow):
         line_naive_act.triggered.connect(self.line_naive_action)
         #todo
         #set_pen_act.triggered.connect(self,set_pen_action)
-        #reset_canvas_act.triggered.connect(self.reset_canvas_action)
+        reset_canvas_act.triggered.connect(self.reset_canvas_action)
+        save_canvas_act.triggered.connect(self.save_canvas_action)
         line_dda_act.triggered.connect(self.line_dda_action)
         line_bresenham_act.triggered.connect(self.line_bresenham_action)
         polygon_dda_act.triggered.connect(self.polygon_dda_action)
@@ -368,13 +371,17 @@ class MainWindow(QMainWindow):
     #def set_pen_action(self):
 
 
-    '''def reset_canvas_action(self):
-        del self.canvas_widget
-        self.canvas_widget = MyCanvas(self.scene, self)
-        self.canvas_widget.setFixedSize(600, 600)
-        self.canvas_widget.main_window = self
-        self.canvas_widget.list_widget = self.list_widget
-        self.statusBar().showMessage('重置画布')'''
+    def reset_canvas_action(self):
+        self.list_widget.clear()
+        self.scene.clear()
+        self.item_cnt = 0
+        self.statusBar().showMessage('重置画布')
+    
+    def save_canvas_action(self):
+        fileName = str(self.file_cnt)+".png"
+        pixmap = self.canvas_widget.grab()
+        pixmap.save(fileName)
+        self.file_cnt += 1
 
     def line_naive_action(self):
         self.canvas_widget.start_draw_line('Naive', self.get_id())
