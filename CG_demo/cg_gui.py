@@ -36,13 +36,10 @@ class MyCanvas(QGraphicsView):
         self.temp_id = ''
         self.temp_item = None
 
-        self.type = ''
-
     def start_draw_line(self, algorithm, item_id):
         self.status = 'line'
         self.temp_algorithm = algorithm
         self.temp_id = item_id
-        self.type = 'line'
     
     #todo
     #def start_reset_canvas(self):
@@ -52,37 +49,38 @@ class MyCanvas(QGraphicsView):
         self.status = 'polygon'
         self.temp_algorithm = algorithm
         self.temp_id = item_id
-        self.type = 'polygon'
     
     def start_draw_ellipse(self, item_id):
         self.status = 'ellipse'
         self.temp_id = item_id
-        self.type = 'ellipse'
     
     def start_draw_curve(self, algorithm, item_id):
         self.status = 'curve'
         self.temp_algorithm = algorithm
         self.temp_id = item_id
-        self.type = 'curve'
     
     def start_translate(self, item_id):
         self.temp_id = item_id
+        self.temp_item = self.item_dict[self.temp_id]
         self.status = 'translate'
 
     def start_rotate(self, item_id):
-        if self.type != 'ellipse':#except ellipse
+        if self.item_dict[item_id].item_type != 'ellipse':#except ellipse
             self.temp_id = item_id
             self.status = 'rotate'
+            self.temp_item = self.item_dict[self.temp_id]
 
     def start_scale(self, item_id):
         self.temp_id = item_id
         self.status = 'scale'
+        self.temp_item = self.item_dict[self.temp_id]
     
     def start_clip(self, algorithm, item_id):
-        if self.type == 'line':
+        if self.item_dict[item_id].item_type == 'line':
             self.temp_algorithm = algorithm
             self.temp_id = item_id
             self.status = 'clip'
+            self.temp_item = self.item_dict[self.temp_id]
 
     def finish_draw(self):
         self.temp_id = self.main_window.get_id()
@@ -249,7 +247,6 @@ class MyItem(QGraphicsItem):
                 painter.setPen(QColor(255,0,0))
                 painter.drawRect(self.boundingRect())
         elif self.item_type == 'curve':
-            #print(self.p_list)
             item_pixels = alg.draw_curve(self.p_list, self.algorithm)
             for p in item_pixels:
                 painter.drawPoint(*p)
@@ -432,31 +429,31 @@ class MainWindow(QMainWindow):
         self.canvas_widget.clear_selection()
     
     def translate_action(self):
-        self.canvas_widget.start_translate(self.get_id())
+        self.canvas_widget.start_translate(self.canvas_widget.selected_id)
         self.statusBar().showMessage('平移变换')
         self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
     
     def rotate_action(self):
-        self.canvas_widget.start_rotate(self.get_id())
+        self.canvas_widget.start_rotate(self.canvas_widget.selected_id)
         self.statusBar().showMessage('旋转变换')
         self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
     
     def scale_action(self):
-        self.canvas_widget.start_scale(self.get_id())
+        self.canvas_widget.start_scale(self.canvas_widget.selected_id)
         self.statusBar().showMessage('缩放变换')
         self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
     
     def clip_cohen_sutherland_action(self):
-        self.canvas_widget.start_clip('Cohen-Sutherland', self.get_id())
+        self.canvas_widget.start_clip('Cohen-Sutherland', self.canvas_widget.selected_id)
         self.statusBar().showMessage('Cohen-Sutherland算法线段裁剪')
         self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
     
     def clip_liang_barsky_action(self):
-        self.canvas_widget.start_clip('Liang-Barsky', self.get_id())
+        self.canvas_widget.start_clip('Liang-Barsky', self.canvas_widget.selected_id)
         self.statusBar().showMessage('Liang-Barsky算法线段裁剪')
         self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
