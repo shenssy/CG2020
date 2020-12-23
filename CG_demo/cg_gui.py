@@ -124,8 +124,10 @@ class MyCanvas(QGraphicsView):
                 self.temp_item.p_list.append((x,y))
             else:
                 self.temp_item = MyItem(self.temp_id, self.status, [[x, y]], self.temp_algorithm)
+                self.temp_item.curve_done = False
+                self.scene().addItem(self.temp_item)
         elif self.status == 'curve' and event.buttons () == QtCore.Qt.RightButton:
-            self.scene().addItem(self.temp_item)
+            self.temp_item.curve_done = True
             self.item_dict[self.temp_id] = self.temp_item
             self.list_widget.addItem(self.temp_id)
             self.finish_draw()
@@ -143,7 +145,9 @@ class MyCanvas(QGraphicsView):
         elif self.status == 'clip':
             self.temp_item.one_x = x
             self.temp_item.one_y = y
-
+            self.temp_item.two_x = x
+            self.temp_item.two_y = y
+            self.temp_item.clip_done = False
             
         self.updateScene([self.sceneRect()])
         super().mousePressEvent(event)
@@ -152,7 +156,6 @@ class MyCanvas(QGraphicsView):
         pos = self.mapToScene(event.localPos().toPoint())
         x = int(pos.x())
         y = int(pos.y())
-        #print("pos",x,y)
         if self.status == 'line' or self.status == 'ellipse':
             self.temp_item.p_list[1] = [x, y]
         #todo
@@ -164,6 +167,7 @@ class MyCanvas(QGraphicsView):
         elif self.status == 'clip':
             self.temp_item.two_x = x
             self.temp_item.two_y = y
+            #self.getPainter()
 
         self.updateScene([self.sceneRect()])
         super().mouseMoveEvent(event)
@@ -175,7 +179,10 @@ class MyCanvas(QGraphicsView):
             self.finish_draw()
         #todo
         elif self.status == 'clip':
+            self.temp_item.clip_done = True
             self.temp_item.p_list = alg.clip(self.temp_item.p_list, self.temp_item.one_x, self.temp_item.one_y, self.temp_item.two_x, self.temp_item.two_y, self.temp_algorithm)
+            self.temp_item.two_x = None
+            self.temp_item.two_y = None
         self.updateScene([self.sceneRect()])
         super().mouseReleaseEvent(event)
     
@@ -223,39 +230,51 @@ class MyItem(QGraphicsItem):
         self.one_y = None #the first point of clip
         self.two_x = None
         self.two_y = None #the second point of clip
+        self.clip_done = True
+        self.curve_done = True
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
         if self.item_type == 'line':
             item_pixels = alg.draw_line(self.p_list, self.algorithm)
             for p in item_pixels:
                 painter.drawPoint(*p)
-            if self.selected:
+            if self.selected and len(self.p_list) == 2:
                 painter.setPen(QColor(255, 0, 0))
                 painter.drawRect(self.boundingRect())
         elif self.item_type == 'polygon':
             item_pixels = alg.draw_polygon(self.p_list, self.algorithm)
             for p in item_pixels:
                 painter.drawPoint(*p)
-            if self.selected:
+            if self.selected and len(self.p_list) >= 2:
                 painter.setPen(QColor(255,0,0))
                 painter.drawRect(self.boundingRect())
         elif self.item_type == 'ellipse':
             item_pixels = alg.draw_ellipse(self.p_list)
             for p in item_pixels:
                 painter.drawPoint(*p)
-            if self.selected:
+            if self.selected and len(self.p_list) == 2:
                 painter.setPen(QColor(255,0,0))
                 painter.drawRect(self.boundingRect())
-        elif self.item_type == 'curve':
+        elif self.item_type == 'curve' and self.curve_done == True:
             item_pixels = alg.draw_curve(self.p_list, self.algorithm)
             for p in item_pixels:
                 painter.drawPoint(*p)
-            if self.selected:
+            if self.selected and len(self.p_list) > 3:
                 painter.setPen(QColor(255,0,0))
                 painter.drawRect(self.boundingRect())
+        if self.item_type ==  'line' and self.clip_done == False and self.one_x != None and self.one_y != None and self.two_x != None and self.two_y != None:
+            x1,y1,x2,y2 = alg.change(self.one_x,self.one_y,self.two_x,self.two_y)
+            painter.setPen(QColor(255,0,0))
+            painter.drawRect(x1,y1,x2-x1,y2-y1)
+        if self.item_type == 'curve' and self.curve_done == False and len(self.p_list) >= 2:
+            for i in range(len(self.p_list)-1):
+                item_tmp = alg.draw_line([(self.p_list)[i],(self.p_list)[i+1]],'DDA')
+                for p in item_tmp:
+                    painter.setPen(QColor(255,0,0))
+                    painter.drawPoint(*p)
 
     def boundingRect(self) -> QRectF:
-        if self.item_type == 'line' or self.item_type == 'ellipse':
+        if (self.item_type == 'line' or self.item_type == 'ellipse') and len(self.p_list) != 0:
             x0, y0 = self.p_list[0]
             x1, y1 = self.p_list[1]
             x = min(x0, x1)
@@ -263,7 +282,7 @@ class MyItem(QGraphicsItem):
             w = max(x0, x1) - x
             h = max(y0, y1) - y
             return QRectF(x - 1, y - 1, w + 2, h + 2)
-        elif self.item_type == 'polygon' or self.item_type == 'curve':
+        elif (self.item_type == 'polygon' or self.item_type == 'curve') and len(self.p_list) != 0:
             max_x = 0
             max_y = 0
             min_x = float('inf')
@@ -361,7 +380,6 @@ class MainWindow(QMainWindow):
 
     def get_id(self):
         _id = str(self.item_cnt)
-        #print(_id)
         self.item_cnt += 1
         return _id
 
@@ -429,34 +447,39 @@ class MainWindow(QMainWindow):
         self.canvas_widget.clear_selection()
     
     def translate_action(self):
-        self.canvas_widget.start_translate(self.canvas_widget.selected_id)
-        self.statusBar().showMessage('平移变换')
-        self.list_widget.clearSelection()
-        self.canvas_widget.clear_selection()
+        if self.canvas_widget.selected_id != '':
+            self.canvas_widget.start_translate(self.canvas_widget.selected_id)
+            self.statusBar().showMessage('平移变换')
+            self.list_widget.clearSelection()
+            self.canvas_widget.clear_selection()
     
     def rotate_action(self):
-        self.canvas_widget.start_rotate(self.canvas_widget.selected_id)
-        self.statusBar().showMessage('旋转变换')
-        self.list_widget.clearSelection()
-        self.canvas_widget.clear_selection()
+        if self.canvas_widget.selected_id != '':
+            self.canvas_widget.start_rotate(self.canvas_widget.selected_id)
+            self.statusBar().showMessage('旋转变换')
+            self.list_widget.clearSelection()
+            self.canvas_widget.clear_selection()
     
     def scale_action(self):
-        self.canvas_widget.start_scale(self.canvas_widget.selected_id)
-        self.statusBar().showMessage('缩放变换')
-        self.list_widget.clearSelection()
-        self.canvas_widget.clear_selection()
+        if self.canvas_widget.selected_id != '':
+            self.canvas_widget.start_scale(self.canvas_widget.selected_id)
+            self.statusBar().showMessage('缩放变换')
+            self.list_widget.clearSelection()
+            self.canvas_widget.clear_selection()
     
     def clip_cohen_sutherland_action(self):
-        self.canvas_widget.start_clip('Cohen-Sutherland', self.canvas_widget.selected_id)
-        self.statusBar().showMessage('Cohen-Sutherland算法线段裁剪')
-        self.list_widget.clearSelection()
-        self.canvas_widget.clear_selection()
+        if self.canvas_widget.selected_id != '':
+            self.canvas_widget.start_clip('Cohen-Sutherland', self.canvas_widget.selected_id)
+            self.statusBar().showMessage('Cohen-Sutherland算法线段裁剪')
+            self.list_widget.clearSelection()
+            self.canvas_widget.clear_selection()
     
     def clip_liang_barsky_action(self):
-        self.canvas_widget.start_clip('Liang-Barsky', self.canvas_widget.selected_id)
-        self.statusBar().showMessage('Liang-Barsky算法线段裁剪')
-        self.list_widget.clearSelection()
-        self.canvas_widget.clear_selection()
+        if self.canvas_widget.selected_id != '':
+            self.canvas_widget.start_clip('Liang-Barsky', self.canvas_widget.selected_id)
+            self.statusBar().showMessage('Liang-Barsky算法线段裁剪')
+            self.list_widget.clearSelection()
+            self.canvas_widget.clear_selection()
 
 
 if __name__ == '__main__':

@@ -304,6 +304,19 @@ def find_u(p1,q1,p2,q2,p3,q3,p4,q4):
         umin = q4/p4
     return [umax,umin]
 
+def func(a,b):
+    return b,a
+
+def change(x_min,y_min,x_max,y_max):#for always get the left_up&right_down
+    if x_min > x_max and y_min > y_max:#start with right_down
+        x_min,x_max = func(x_min,x_max)
+        y_min,y_max = func(y_min,y_max)
+    elif x_min <= x_max and y_min >= y_max:#start with left_down
+        y_min,y_max = func(y_min,y_max)
+    elif x_min > x_max and y_min < y_max:#start with right_up
+        x_min,x_max = func(x_min,x_max)
+    return x_min,y_min,x_max,y_max
+
 def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     """线段裁剪
 
@@ -315,18 +328,11 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :param algorithm: (string) 使用的裁剪算法，包括'Cohen-Sutherland'和'Liang-Barsky'
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
-    def func(a,b):
-        return b,a
+    
     result = []
     x0, y0 = p_list[0]
     x1, y1 = p_list[1]
-    if x_min > x_max and y_min > y_max:#start with right_down
-        x_min,x_max = func(x_min,x_max)
-        y_min,y_max = func(y_min,y_max)
-    elif x_min <= x_max and y_min >= y_max:#start with left_down
-        y_min,y_max = func(y_min,y_max)
-    elif x_min > x_max and y_min < y_max:#start with right_up
-        x_min,x_max = func(x_min,x_max)
+    x_min,y_min,x_max,y_max = change(x_min,y_min,x_max,y_max)
     if algorithm == 'Cohen-Sutherland':
         flag = 0 #need to break out of the loop or not
         while flag == 0:
@@ -384,6 +390,8 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
         q4 = y_max - y0
         if (x1-x0) == 0:
             if q1 < 0 or q2 < 0:
+                result.append((0,0))
+                result.append((0,0))
                 return result
             elif q1 >0 and q2 > 0:
                 tmp = find_u(p1,q1,p2,q2,p3,q3,p4,q4)
@@ -391,6 +399,8 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
                 umin = tmp[1]
         elif (y1-y0) == 0:
             if q3 < 0 or q4 < 0:
+                result.append((0,0))
+                result.append((0,0))
                 return result
             elif q1 > 0 and q2 > 0:
                 tmp = find_u(p1,q1,p2,q2,p3,q3,p4,q4)
@@ -401,20 +411,10 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
             umax = tmp[0]
             umin = tmp[1]
         if umax > umin:
+            result.append((0,0))
+            result.append((0,0))
             return result
         elif umax < umin:
-            if umax != 0:
-                result.append((int(x0+umax*(x1-x0)),int(y0+umax*(y1-y0))))
-            else:
-                if x0>=x_min and x0<=x_max and y0>=y_min and y0<=y_max:
-                    result.append((x0,y0))
-                elif x1>=x_min and x1<=x_max and y1>=y_min and y1<=y_max:
-                    result.append((x1,y1))
-            if umin != 1:
-                result.append((int(x0+umin*(x1-x0)),int(y0+umin*(y1-y0))))
-            else:
-                if x0>=x_min and x0<=x_max and y0>=y_min and y0<=y_max:
-                    result.append((x0,y0))
-                elif x1>=x_min and x1<=x_max and y1>=y_min and y1<=y_max:
-                    result.append((x1,y1))
+            result.append((int(x0+umax*(x1-x0)),int(y0+umax*(y1-y0))))
+            result.append((int(x0+umin*(x1-x0)),int(y0+umin*(y1-y0))))
     return result
