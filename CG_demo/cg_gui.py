@@ -37,7 +37,7 @@ class MyCanvas(QGraphicsView):
         self.temp_id = ''
         self.temp_item = None
 
-        #self.color = QColor(0, 0, 0)
+        self.color = QColor(0, 0, 0)
 
     def start_draw_line(self, algorithm, item_id):
         self.status = 'line'
@@ -45,8 +45,6 @@ class MyCanvas(QGraphicsView):
         self.temp_id = item_id
     
     #todo
-    #def start_reset_canvas(self):
-
 
     def start_draw_polygon(self, algorithm, item_id):
         self.status = 'polygon'
@@ -94,6 +92,8 @@ class MyCanvas(QGraphicsView):
             self.selected_id = ''
 
     def selection_changed(self, selected):
+        if selected == '':
+            return
         self.main_window.statusBar().showMessage('图元选择： %s' % selected)
         if self.selected_id != '':
             self.item_dict[self.selected_id].selected = False
@@ -109,14 +109,14 @@ class MyCanvas(QGraphicsView):
         x = int(pos.x())
         y = int(pos.y())
         if self.status == 'line' or self.status == 'ellipse':
-            self.temp_item = MyItem(self.temp_id, self.status, [[x, y], [x, y]], self.temp_algorithm)
+            self.temp_item = MyItem(self.temp_id, self.status, [[x, y], [x, y]], self.temp_algorithm, self.color)
             self.scene().addItem(self.temp_item)
         #todo
         elif self.status == 'polygon' and event.buttons () == QtCore.Qt.LeftButton:#polygon with left
-            if self.temp_item != None:
+            if self.temp_item != None and self.temp_item.item_type == 'polygon':
                 self.temp_item.p_list.append((x,y))
             else:
-                self.temp_item = MyItem(self.temp_id, self.status, [[x, y]], self.temp_algorithm)
+                self.temp_item = MyItem(self.temp_id, self.status, [[x, y]], self.temp_algorithm, self.color)
                 self.scene().addItem(self.temp_item)
         elif self.status == 'polygon' and event.buttons () == QtCore.Qt.RightButton:#polygon with right to paint
             self.item_dict[self.temp_id] = self.temp_item
@@ -124,10 +124,10 @@ class MyCanvas(QGraphicsView):
             self.temp_item = None
             self.finish_draw()
         elif self.status == 'curve' and event.buttons () == QtCore.Qt.LeftButton:
-            if self.temp_item != None:
+            if self.temp_item != None and self.temp_item.item_type == 'curve':
                 self.temp_item.p_list.append((x,y))
             else:
-                self.temp_item = MyItem(self.temp_id, self.status, [[x, y]], self.temp_algorithm)
+                self.temp_item = MyItem(self.temp_id, self.status, [[x, y]], self.temp_algorithm, self.color)
                 self.temp_item.curve_done = False
                 self.scene().addItem(self.temp_item)
         elif self.status == 'curve' and event.buttons () == QtCore.Qt.RightButton:
@@ -168,11 +168,9 @@ class MyCanvas(QGraphicsView):
             self.temp_item.p_list = alg.translate(self.temp_item.p_list, x-self.temp_item.x_now,y-self.temp_item.y_now)
             self.temp_item.x_now = x
             self.temp_item.y_now = y
-            #self.clear_selection()
         elif self.status == 'clip':
             self.temp_item.two_x = x
             self.temp_item.two_y = y
-            #self.getPainter()
 
         self.updateScene([self.sceneRect()])
         super().mouseMoveEvent(event)
@@ -209,7 +207,7 @@ class MyItem(QGraphicsItem):
     """
     自定义图元类，继承自QGraphicsItem
     """
-    def __init__(self, item_id: str, item_type: str, p_list: list, algorithm: str = '', parent: QGraphicsItem = None):
+    def __init__(self, item_id: str, item_type: str, p_list: list, algorithm: str = '', color: QColor = QColor(0, 0, 0),parent: QGraphicsItem = None):
         """
 
         :param item_id: 图元ID
@@ -237,9 +235,10 @@ class MyItem(QGraphicsItem):
         self.two_y = None #the second point of clip
         self.clip_done = True
         self.curve_done = True
+        self.color = color
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
-        #print(self.id)
+        painter.setPen(self.color)
         if self.item_type == 'line':
             item_pixels = alg.draw_line(self.p_list, self.algorithm)
             for p in item_pixels:
@@ -356,7 +355,7 @@ class MainWindow(QMainWindow):
         exit_act.triggered.connect(qApp.quit)
         line_naive_act.triggered.connect(self.line_naive_action)
         #todo
-        #set_pen_act.triggered.connect(self.set_pen_action)
+        set_pen_act.triggered.connect(self.set_pen_action)
         reset_canvas_act.triggered.connect(self.reset_canvas_action)
         save_canvas_act.triggered.connect(self.save_canvas_action)
         line_dda_act.triggered.connect(self.line_dda_action)
@@ -389,17 +388,23 @@ class MainWindow(QMainWindow):
         self.item_cnt += 1
         return _id
 
-    '''def set_pen_action(self):
-        color = QColorDialog.getColor(self.canvas_widget.get_pen())
-        self.canvas_widget.set_pen(color)'''
+    def set_pen_action(self):
+        color = QColorDialog.getColor(self.canvas_widget.color)
+        self.canvas_widget.color = color
 
     def reset_canvas_action(self):
+        self.canvas_widget.item_dict = {}
+        self.canvas_widget.selected_id = ''
+        self.canvas_widget.status = '' #for back to the original status
+        self.canvas_widget.color = QColor(0, 0, 0)
+        self.list_widget.clearSelection()
+        self.canvas_widget.clear_selection()
         self.list_widget.clear()
         self.scene.clear()
         self.item_cnt = 0
+        self.file_cnt = 1
         self.canvas_widget.temp_id = '0'
         self.statusBar().showMessage('重置画布')
-        self.canvas_widget.status = '' #for back to the original status
     
     def save_canvas_action(self):
         fileName = str(self.file_cnt)+".bmp"
