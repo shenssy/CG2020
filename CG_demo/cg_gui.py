@@ -14,7 +14,8 @@ from PyQt5.QtWidgets import (
     QListWidget,
     QHBoxLayout,
     QWidget,
-    QStyleOptionGraphicsItem)
+    QStyleOptionGraphicsItem,
+    QColorDialog)
 from PyQt5.QtGui import QPainter, QMouseEvent, QColor, QWheelEvent
 from PyQt5.QtCore import QRectF
 from PyQt5 import QtCore
@@ -35,6 +36,8 @@ class MyCanvas(QGraphicsView):
         self.temp_algorithm = ''
         self.temp_id = ''
         self.temp_item = None
+
+        #self.color = QColor(0, 0, 0)
 
     def start_draw_line(self, algorithm, item_id):
         self.status = 'line'
@@ -118,6 +121,7 @@ class MyCanvas(QGraphicsView):
         elif self.status == 'polygon' and event.buttons () == QtCore.Qt.RightButton:#polygon with right to paint
             self.item_dict[self.temp_id] = self.temp_item
             self.list_widget.addItem(self.temp_id)
+            self.temp_item = None
             self.finish_draw()
         elif self.status == 'curve' and event.buttons () == QtCore.Qt.LeftButton:
             if self.temp_item != None:
@@ -130,6 +134,7 @@ class MyCanvas(QGraphicsView):
             self.temp_item.curve_done = True
             self.item_dict[self.temp_id] = self.temp_item
             self.list_widget.addItem(self.temp_id)
+            self.temp_item = None
             self.finish_draw()
         elif self.status == 'translate':
             self.temp_item.x_now = x
@@ -163,7 +168,7 @@ class MyCanvas(QGraphicsView):
             self.temp_item.p_list = alg.translate(self.temp_item.p_list, x-self.temp_item.x_now,y-self.temp_item.y_now)
             self.temp_item.x_now = x
             self.temp_item.y_now = y
-            self.clear_selection()
+            #self.clear_selection()
         elif self.status == 'clip':
             self.temp_item.two_x = x
             self.temp_item.two_y = y
@@ -234,6 +239,7 @@ class MyItem(QGraphicsItem):
         self.curve_done = True
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
+        #print(self.id)
         if self.item_type == 'line':
             item_pixels = alg.draw_line(self.p_list, self.algorithm)
             for p in item_pixels:
@@ -350,7 +356,7 @@ class MainWindow(QMainWindow):
         exit_act.triggered.connect(qApp.quit)
         line_naive_act.triggered.connect(self.line_naive_action)
         #todo
-        #set_pen_act.triggered.connect(self,set_pen_action)
+        #set_pen_act.triggered.connect(self.set_pen_action)
         reset_canvas_act.triggered.connect(self.reset_canvas_action)
         save_canvas_act.triggered.connect(self.save_canvas_action)
         line_dda_act.triggered.connect(self.line_dda_action)
@@ -383,17 +389,20 @@ class MainWindow(QMainWindow):
         self.item_cnt += 1
         return _id
 
-    #def set_pen_action(self):
-
+    '''def set_pen_action(self):
+        color = QColorDialog.getColor(self.canvas_widget.get_pen())
+        self.canvas_widget.set_pen(color)'''
 
     def reset_canvas_action(self):
         self.list_widget.clear()
         self.scene.clear()
         self.item_cnt = 0
+        self.canvas_widget.temp_id = '0'
         self.statusBar().showMessage('重置画布')
+        self.canvas_widget.status = '' #for back to the original status
     
     def save_canvas_action(self):
-        fileName = str(self.file_cnt)+".png"
+        fileName = str(self.file_cnt)+".bmp"
         pixmap = self.canvas_widget.grab()
         pixmap.save(fileName)
         self.file_cnt += 1
@@ -450,36 +459,26 @@ class MainWindow(QMainWindow):
         if self.canvas_widget.selected_id != '':
             self.canvas_widget.start_translate(self.canvas_widget.selected_id)
             self.statusBar().showMessage('平移变换')
-            self.list_widget.clearSelection()
-            self.canvas_widget.clear_selection()
     
     def rotate_action(self):
         if self.canvas_widget.selected_id != '':
             self.canvas_widget.start_rotate(self.canvas_widget.selected_id)
             self.statusBar().showMessage('旋转变换')
-            self.list_widget.clearSelection()
-            self.canvas_widget.clear_selection()
     
     def scale_action(self):
         if self.canvas_widget.selected_id != '':
             self.canvas_widget.start_scale(self.canvas_widget.selected_id)
             self.statusBar().showMessage('缩放变换')
-            self.list_widget.clearSelection()
-            self.canvas_widget.clear_selection()
     
     def clip_cohen_sutherland_action(self):
         if self.canvas_widget.selected_id != '':
             self.canvas_widget.start_clip('Cohen-Sutherland', self.canvas_widget.selected_id)
             self.statusBar().showMessage('Cohen-Sutherland算法线段裁剪')
-            self.list_widget.clearSelection()
-            self.canvas_widget.clear_selection()
     
     def clip_liang_barsky_action(self):
         if self.canvas_widget.selected_id != '':
             self.canvas_widget.start_clip('Liang-Barsky', self.canvas_widget.selected_id)
             self.statusBar().showMessage('Liang-Barsky算法线段裁剪')
-            self.list_widget.clearSelection()
-            self.canvas_widget.clear_selection()
 
 
 if __name__ == '__main__':
