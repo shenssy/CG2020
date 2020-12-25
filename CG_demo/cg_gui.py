@@ -104,15 +104,6 @@ class MyCanvas(QGraphicsView):
         self.status = ''
         self.updateScene([self.sceneRect()])
 
-    '''def cancel_selection(self, selected_item):
-        if self.selected_id == '':
-            return
-        self.item_dict[self.selected_id].selected=False
-        self.item_dict[self.selected_id].update()
-        self.selected_id = ''
-        self.status = ''
-        self.updateScene([self.sceneRect()])'''
-
     def mousePressEvent(self, event: QMouseEvent) -> None:
         pos = self.mapToScene(event.localPos().toPoint())
         x = int(pos.x())
@@ -434,10 +425,12 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('重置画布')
     
     def save_canvas_action(self):
+        self.canvas_widget.item_dict[self.canvas_widget.selected_id].selected = False # save canvas without bounding rect
         fileName = str(self.file_cnt)+".bmp"
         pixmap = self.canvas_widget.grab()
         pixmap.save(fileName)
         self.file_cnt += 1
+        self.canvas_widget.item_dict[self.canvas_widget.selected_id].selected = True
 
     def line_naive_action(self):
         self.canvas_widget.start_draw_line('Naive', self.get_id())
