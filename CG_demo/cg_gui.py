@@ -104,6 +104,15 @@ class MyCanvas(QGraphicsView):
         self.status = ''
         self.updateScene([self.sceneRect()])
 
+    '''def cancel_selection(self, selected_item):
+        if self.selected_id == '':
+            return
+        self.item_dict[self.selected_id].selected=False
+        self.item_dict[self.selected_id].update()
+        self.selected_id = ''
+        self.status = ''
+        self.updateScene([self.sceneRect()])'''
+
     def mousePressEvent(self, event: QMouseEvent) -> None:
         pos = self.mapToScene(event.localPos().toPoint())
         x = int(pos.x())
@@ -118,9 +127,9 @@ class MyCanvas(QGraphicsView):
             else:
                 self.temp_item = MyItem(self.temp_id, self.status, [[x, y]], self.temp_algorithm, self.color)
                 self.scene().addItem(self.temp_item)
+                self.item_dict[self.temp_id] = self.temp_item
+                self.list_widget.addItem(self.temp_id)
         elif self.status == 'polygon' and event.buttons () == QtCore.Qt.RightButton:#polygon with right to paint
-            self.item_dict[self.temp_id] = self.temp_item
-            self.list_widget.addItem(self.temp_id)
             self.temp_item = None
             self.finish_draw()
         elif self.status == 'curve' and event.buttons () == QtCore.Qt.LeftButton:
@@ -130,10 +139,12 @@ class MyCanvas(QGraphicsView):
                 self.temp_item = MyItem(self.temp_id, self.status, [[x, y]], self.temp_algorithm, self.color)
                 self.temp_item.curve_done = False
                 self.scene().addItem(self.temp_item)
+                self.item_dict[self.temp_id] = self.temp_item
+                self.list_widget.addItem(self.temp_id)
         elif self.status == 'curve' and event.buttons () == QtCore.Qt.RightButton:
             self.temp_item.curve_done = True
-            self.item_dict[self.temp_id] = self.temp_item
-            self.list_widget.addItem(self.temp_id)
+            #self.item_dict[self.temp_id] = self.temp_item
+            #self.list_widget.addItem(self.temp_id)
             self.temp_item = None
             self.finish_draw()
         elif self.status == 'translate':
@@ -155,7 +166,12 @@ class MyCanvas(QGraphicsView):
             self.temp_item.two_x = x
             self.temp_item.two_y = y
             self.temp_item.clip_done = False
-            
+        
+        #update those unfinished curve, those b-spline curves without enough number of points will not be drawn
+        for i in (self.item_dict).values():
+            if i.id != self.temp_id and i.item_type == 'curve' and i.curve_done == False:
+                i.curve_done = True
+
         self.updateScene([self.sceneRect()])
         super().mousePressEvent(event)
 
@@ -229,18 +245,23 @@ class MyItem(QGraphicsItem):
 
         self.x_now = p_list[0][0] 
         self.y_now = p_list[0][1]#for translate
+
         self.rotate_x = None
         self.rotate_y = None #for rotate
+
         self.scale_x = None
         self.scale_y = None #for scale
         self.origin_list = p_list #for scale, always use the origin points to operate
         self.multiple = 1 #original scale mutiple
+
         self.one_x = None
         self.one_y = None #the first point of clip
         self.two_x = None
         self.two_y = None #the second point of clip
         self.clip_done = True
+
         self.curve_done = True
+        
         self.color = color
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget: Optional[QWidget] = ...) -> None:
@@ -377,6 +398,7 @@ class MainWindow(QMainWindow):
         clip_cohen_sutherland_act.triggered.connect(self.clip_cohen_sutherland_action)
         clip_liang_barsky_act.triggered.connect(self.clip_liang_barsky_action)
         self.list_widget.currentTextChanged.connect(self.canvas_widget.selection_changed)
+        #self.list_widget.itemDoubleClicked.connect(self.canvas_widget.cancel_selection)
 
         # 设置主窗口的布局
         self.hbox_layout = QHBoxLayout()
@@ -408,7 +430,6 @@ class MainWindow(QMainWindow):
         self.list_widget.clear()
         self.scene.clear()
         self.item_cnt = 0
-        self.file_cnt = 1
         self.canvas_widget.temp_id = '0'
         self.statusBar().showMessage('重置画布')
     
