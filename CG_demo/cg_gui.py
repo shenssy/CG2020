@@ -144,7 +144,9 @@ class MyCanvas(QGraphicsView):
             self.temp_item.rotate_x = x
             self.temp_item.rotate_y = y
         elif self.status == 'scale':
-            self.temp_item.p_list = alg.scale(self.temp_item.p_list, x, y, 1)
+            self.temp_item.origin_list = self.temp_item.p_list
+            self.temp_item.multiple = 1
+            self.temp_item.p_list = alg.scale(self.temp_item.origin_list, x, y, self.temp_item.multiple)
             self.temp_item.scale_x = x
             self.temp_item.scale_y = y
         elif self.status == 'clip':
@@ -196,10 +198,12 @@ class MyCanvas(QGraphicsView):
             else:
                 self.temp_item.p_list = alg.rotate(self.temp_item.p_list,self.temp_item.rotate_x,self.temp_item.rotate_y,355)
         elif self.status == 'scale' and self.temp_item.scale_x != None and self.temp_item.scale_y !=None:
-            if event.angleDelta().y() < 0:#down
-                self.temp_item.p_list = alg.scale(self.temp_item.p_list,self.temp_item.scale_x, self.temp_item.scale_y, 0.9)
-            else:
-                self.temp_item.p_list = alg.scale(self.temp_item.p_list,self.temp_item.scale_x, self.temp_item.scale_y, 1.1)
+            if event.angleDelta().y() < 0 and self.temp_item.multiple > 0:#down
+                self.temp_item.multiple -= 0.05
+                self.temp_item.p_list = alg.scale(self.temp_item.origin_list,self.temp_item.scale_x, self.temp_item.scale_y, self.temp_item.multiple)
+            elif event.angleDelta().y() > 0:#up
+                self.temp_item.multiple += 0.05
+                self.temp_item.p_list = alg.scale(self.temp_item.origin_list,self.temp_item.scale_x, self.temp_item.scale_y, self.temp_item.multiple)
         self.updateScene([self.sceneRect()])
         super().wheelEvent(event)
 
@@ -229,6 +233,8 @@ class MyItem(QGraphicsItem):
         self.rotate_y = None #for rotate
         self.scale_x = None
         self.scale_y = None #for scale
+        self.origin_list = p_list #for scale, always use the origin points to operate
+        self.multiple = 1 #original scale mutiple
         self.one_x = None
         self.one_y = None #the first point of clip
         self.two_x = None
