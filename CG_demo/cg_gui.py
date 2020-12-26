@@ -425,12 +425,14 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('重置画布')
     
     def save_canvas_action(self):
-        self.canvas_widget.item_dict[self.canvas_widget.selected_id].selected = False # save canvas without bounding rect
+        if self.canvas_widget.selected_id != '':
+            self.canvas_widget.item_dict[self.canvas_widget.selected_id].selected = False # save canvas without bounding rect
         fileName = str(self.file_cnt)+".bmp"
         pixmap = self.canvas_widget.grab()
         pixmap.save(fileName)
         self.file_cnt += 1
-        self.canvas_widget.item_dict[self.canvas_widget.selected_id].selected = True
+        if self.canvas_widget.selected_id != '':
+            self.canvas_widget.item_dict[self.canvas_widget.selected_id].selected = True
 
     def line_naive_action(self):
         self.canvas_widget.start_draw_line('Naive', self.get_id())
